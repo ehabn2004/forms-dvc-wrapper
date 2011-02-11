@@ -12,11 +12,13 @@
 package oracle.forms.demos.bigraph;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Image;
+import java.awt.KeyboardFocusManager;
 import java.awt.MediaTracker;
 import java.awt.Toolkit;
 import java.awt.datatransfer.DataFlavor;
@@ -28,6 +30,10 @@ import java.awt.event.MouseMotionAdapter;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
+
+import java.beans.PropertyChangeEvent;
+
+import java.beans.PropertyChangeListener;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -70,6 +76,7 @@ import oracle.dss.util.format.BaseViewFormat;
 import oracle.forms.handler.IHandler;
 import oracle.forms.properties.ID;
 import oracle.forms.ui.CustomEvent;
+import oracle.forms.ui.ExtendedFrame;
 import oracle.forms.ui.VBean;
 
 
@@ -108,8 +115,6 @@ public class FormsGraph extends VBean implements Transferable {
     public final int dataPrimKey = 4;
     public final int noData = 5;
 
-    private boolean bMouseActive = true;
-
     // by default returns null
     protected int returnValueSelection = noData;
 
@@ -137,7 +142,6 @@ public class FormsGraph extends VBean implements Transferable {
     protected static final ID pHideFrame = ID.registerProperty("HIDE_FRAME");
     protected static final ID pHideGraph = ID.registerProperty("HIDE_GRAPH");
     protected static final ID pMouseAction = ID.registerProperty("MOUSEACTION");
-    protected static final ID pMouseActive = ID.registerProperty("MOUSE_ACTIVE");
     protected static final ID pModifyData = ID.registerProperty("MODIFY_ROW_DATA");
     protected static final ID pMaxScaleYAxis = ID.registerProperty("MAX_SCALE_Y_AXIS");
     protected static final ID pMinScaleYAxis = ID.registerProperty("MIN_SCALE_Y_AXIS");
@@ -211,6 +215,9 @@ public class FormsGraph extends VBean implements Transferable {
     private JFrame jf = null;
     private JPanel glass = null;
     private String sVersion = "1.0.2";
+    
+    private boolean bAddedFocusListener = false;
+    private ExtendedFrame frmOwnerFrame = null;
 
     public FormsGraph() {
 
@@ -372,8 +379,6 @@ public class FormsGraph extends VBean implements Transferable {
             return maxScaleY2Axis(sParams);
         } else if (_ID == pMouseAction) {
             return mouseAction(sParams);
-        } else if (_ID == pMouseActive) {
-            return mouseActive(sParams);
         } else if (_ID == pModifyData) {
             return modifyData(sParams);
         } else if (_ID == pPositionLegendArea) {
@@ -751,6 +756,22 @@ public class FormsGraph extends VBean implements Transferable {
             m_graph.setVisible(true);
             m_graph.setTabularData(al);
             // m_graph.setLocalRelationalData(al);
+            
+            if (!bAddedFocusListener) {
+              // Add a keyboardfocuslistener to fix heavy/lightweight problem
+              frmOwnerFrame = getOwnerWindow(this);
+              KeyboardFocusManager focusManager = KeyboardFocusManager.getCurrentKeyboardFocusManager();
+              focusManager.addPropertyChangeListener(
+                new PropertyChangeListener() {
+                  public void propertyChange(PropertyChangeEvent e) {
+                      if (e.getPropertyName().equals("focusOwner") && e.getNewValue() != null && e.getNewValue() instanceof Component) {
+                        glass.setVisible(!isChildFocusOwner(frmOwnerFrame, (Component)e.getNewValue()));
+                      }
+                  }
+                }
+              );
+              bAddedFocusListener = true;
+            }
         }
         DebugMessage("ADD_DATA_TO_GRAPH: finished");
         return true;
@@ -2618,20 +2639,6 @@ public class FormsGraph extends VBean implements Transferable {
     }
 
     /**
-     * Forms property: MOUSE_ACTIVE
-     * @param sParams
-     * @return
-     */
-    private boolean mouseActive(String sParams) {
-        if (!sParams.equals("")) {
-            bMouseActive = sParams.equalsIgnoreCase("FALSE") ? false : true;
-            glass.setVisible(!bMouseActive);
-            DebugMessage("MOUSE_ACTIVE: " + bMouseActive);
-        }
-        return true;
-    }
-
-    /**
      * Forms property: RESET_GRAPH
      * @param sParams
      * @return
@@ -3214,5 +3221,35 @@ public class FormsGraph extends VBean implements Transferable {
         m_graph.setAutoLayout(Graph.AL_ALWAYS);
         // the graph is first shown when data is provided
         m_graph.setVisible(false);
+    }
+    
+    /**
+     * Finds and returns the instance of ExtendedFrame which holds the supplied Component.
+     * @param c
+     * @return
+     */
+    public ExtendedFrame getOwnerWindow(Component c) {
+        while (c.getParent() != null) {
+            if (c instanceof ExtendedFrame) {
+                return (ExtendedFrame)c;
+            } else
+                c = c.getParent();
+        }
+        return null;
+    }
+    
+    /**
+     * Finds out if the ExtendedFrame which parameter comp exists in is the same as the ExtendedFrame which currently has focus.
+     * @param frmOwnerFrame
+     * @param comp
+     * @return
+     */
+    public boolean isChildFocusOwner(ExtendedFrame frmOwnerFrame, Component comp) {
+      ExtendedFrame frame = getOwnerWindow(comp);
+      if (frame != null) {
+        //System.out.println("Found parent frame");
+        return frame == frmOwnerFrame;
+      }
+      return false;
     }
 }
