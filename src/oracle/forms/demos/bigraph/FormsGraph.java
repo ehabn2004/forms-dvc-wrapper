@@ -15,28 +15,18 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.FontMetrics;
-import java.awt.Graphics;
-import java.awt.Image;
 import java.awt.KeyboardFocusManager;
-import java.awt.MediaTracker;
 import java.awt.Toolkit;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.Transferable;
-import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.KeyAdapter;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.image.BufferedImage;
 
 import java.beans.PropertyChangeEvent;
-
 import java.beans.PropertyChangeListener;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -80,7 +70,7 @@ import oracle.forms.ui.ExtendedFrame;
 import oracle.forms.ui.VBean;
 
 
-public class FormsGraph extends VBean implements Transferable {
+public class FormsGraph extends VBean {
     private String sDelimiter = ","; // default delimiter for the data passed to the graph
     private int mChart_height = 400; // default value for chart height.
     private int mChart_width = 400; // default value for chart width.
@@ -218,6 +208,10 @@ public class FormsGraph extends VBean implements Transferable {
     
     private boolean bAddedFocusListener = false;
     private ExtendedFrame frmOwnerFrame = null;
+    
+    public Graph getGraph() {
+      return m_graph;
+    }
 
     public FormsGraph() {
 
@@ -2763,7 +2757,7 @@ public class FormsGraph extends VBean implements Transferable {
                      m_graph.getParent().getSize().getHeight() + " w=" +
                      m_graph.getParent().getSize().getWidth());
         m_graph.setImageSize(m_graph.getParent().getSize());
-        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(this,
+        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new FormsGraphTransferable(this),
                                                                      null);
         DebugMessage("EXPORT_CLIPBOARD: m_graph h=" +
                      m_graph.getImageSize().getHeight() + " w=" +
@@ -3079,91 +3073,6 @@ public class FormsGraph extends VBean implements Transferable {
         } else {
             return super.getProperty(_ID);
         }
-    }
-
-    /**
-     * Methods for transferring image to clipboard
-     */
-    public DataFlavor[] getTransferDataFlavors() {
-        return new DataFlavor[] { DataFlavor.imageFlavor };
-    }
-
-    public boolean isDataFlavorSupported(DataFlavor flavor) {
-        return DataFlavor.imageFlavor.equals(flavor);
-    }
-
-    public Object getTransferData(DataFlavor flavor) throws UnsupportedFlavorException {
-        if (!isDataFlavorSupported(flavor))
-            throw new UnsupportedFlavorException(flavor);
-
-        if (flavor == DataFlavor.imageFlavor) {
-            // Capture exported image in a byte array
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            m_graph.exportToPNG(out);
-
-            // Wait until the rendering completed
-            Image image =
-                Toolkit.getDefaultToolkit().createImage(out.toByteArray());
-            MediaTracker tracker = new MediaTracker(this);
-            tracker.addImage(image, 1);
-            try {
-                tracker.waitForAll();
-            } catch (InterruptedException ex) {
-            }
-
-            // Begin: Add title to image
-            String sTitle = m_graph.getDataviewTitle().getText();
-
-            if (sTitle == null || sTitle.equals("")) {
-                DebugMessage("Graph title is empty, skipping...");
-                return image;
-            }
-
-            DebugMessage("Graph title: '" + sTitle + "'");
-
-            Font font = m_graph.getDataviewTitle().getFont();
-            FontMetrics fm = m_graph.getFontMetrics(font);
-            int iStringWidth = fm.stringWidth(sTitle);
-            int iStringHeight = fm.getHeight();
-            int iImageWidth = m_graph.getParent().getWidth();
-            int iImageHeight = m_graph.getParent().getHeight();
-            DebugMessage("iImageWidth=" + iImageWidth + " iImageHeight=" +
-                         iImageHeight + " iStringWidth=" + iStringWidth +
-                         " iStringHeight=" + iStringHeight);
-            iStringHeight += 2; // Add some space between title and image
-
-            String[] aTitle = sTitle.split("\n");
-
-            // Create a new image with room for title and image
-            BufferedImage newImage =
-                new BufferedImage(iImageWidth, iImageHeight +
-                                  (iStringHeight * aTitle.length),
-                                  BufferedImage.TYPE_INT_RGB);
-            Graphics g = newImage.getGraphics();
-
-            // Draw the screenshot in the new image
-            g.drawImage(image, 0, iStringHeight * aTitle.length, null);
-
-            // Fill the title area with white background
-            g.setColor(Color.white);
-            g.fillRect(0, 0, iImageWidth, iStringHeight * aTitle.length);
-
-            // Draw the title in the title area
-            g.setColor(Color.black);
-            g.setFont(font);
-
-            for (int i = 0; i < aTitle.length; i++) {
-                iStringWidth = fm.stringWidth(aTitle[i]);
-                g.drawString(aTitle[i], iImageWidth / 2 - iStringWidth / 2,
-                             (iStringHeight * (i + 1)) - 2);
-            }
-
-            g.dispose();
-            // End: Add title to image
-
-            return newImage;
-        }
-        return null;
     }
 
     /**
