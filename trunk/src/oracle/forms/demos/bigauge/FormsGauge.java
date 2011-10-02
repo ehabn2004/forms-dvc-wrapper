@@ -22,7 +22,7 @@ import oracle.dss.gauge.Gauge;
 import oracle.dss.gauge.GaugeAttributes;
 import oracle.dss.gauge.GaugeConstants;
 
-import oracle.forms.demos.bigraph.colorCodeRegistry;
+import oracle.forms.demos.bigraph.ColorCodeRegistry;
 import oracle.forms.handler.IHandler;
 import oracle.forms.properties.ID;
 import oracle.forms.ui.CustomEvent;
@@ -181,7 +181,7 @@ public class FormsGauge extends VBean {
         String[] aParams = ((String)_object).split(sDelimiter);
         debugMessage("SET_THRESHOLD_COLORS: Received " + aParams.length + " colors.");
         for (int i=0; i<aParams.length; i++) {
-          dataStore.addThresholdColor(colorCodeRegistry.getColorCode(aParams[i]));
+          dataStore.addThresholdColor(ColorCodeRegistry.getColorCode(aParams[i]));
         }
       }
       
@@ -357,7 +357,7 @@ public class FormsGauge extends VBean {
       else if (_ID == pSetThresholdsBorderColor) {
         debugMessage("SET_THRESHOLDS_BORDER_COLOR: Setting border color to '" + (String)_object + "' for '" + dataStore.getThresholds().size() + "' thresholds...");
         for (int i=0; i<dataStore.getThresholds().size(); i++) {
-          m_gauge.getThreshold().setBorderColor(i, colorCodeRegistry.getColorCode((String)_object));
+          m_gauge.getThreshold().setBorderColor(i, ColorCodeRegistry.getColorCode((String)_object));
         }
         return true;
       }

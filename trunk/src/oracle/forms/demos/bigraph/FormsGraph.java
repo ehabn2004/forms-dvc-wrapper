@@ -15,7 +15,6 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.KeyboardFocusManager;
 import java.awt.Toolkit;
 import java.awt.event.KeyAdapter;
 import java.awt.event.MouseAdapter;
@@ -23,17 +22,12 @@ import java.awt.event.MouseMotionAdapter;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
-import java.lang.NumberFormatException;
-
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.StringTokenizer;
 
 import javax.swing.BorderFactory;
@@ -51,8 +45,6 @@ import oracle.dss.dataView.managers.ViewFormat;
 import oracle.dss.graph.BaseGraphComponent;
 import oracle.dss.graph.Graph;
 import oracle.dss.graph.GraphConstants;
-import oracle.dss.graph.LegendArea;
-import oracle.dss.graph.ReferenceObject;
 import oracle.dss.graph.Series;
 import oracle.dss.util.CustomStyle;
 import oracle.dss.util.DataDirector;
@@ -63,6 +55,9 @@ import oracle.dss.util.SeriesOutOfRangeException;
 import oracle.dss.util.SliceOutOfRangeException;
 import oracle.dss.util.format.BaseViewFormat;
 
+import oracle.forms.demos.bigraph.impl.AddDataToGraph;
+import oracle.forms.demos.bigraph.impl.AddIndexLine;
+import oracle.forms.demos.bigraph.impl.AddRowData;
 import oracle.forms.handler.IHandler;
 import oracle.forms.properties.ID;
 import oracle.forms.ui.CustomEvent;
@@ -79,9 +74,6 @@ public class FormsGraph extends VBean {
     private int mSeparateFrameXPos = 10; // xPos of the separate Graph frame
     private int mSeparateFrameYPos = 10; // yPos of the separate Graph frame
     private boolean recoverGraphToVBean = false; // this flag is set when the Graph component in the Forms Bean component is replaced by a panel due to no data available in the graph
-    private int AlignRight = SwingConstants.RIGHT;
-    private int AlignLeft = SwingConstants.LEFT;
-    private int AlignCenter = SwingConstants.CENTER;
     protected boolean showGraphAsSeries = false;
     private boolean bDebugMode = false; // debug true/false
     private String mWindowTitle = "Forms - BI Graph"; // title of separate frame
@@ -90,9 +82,9 @@ public class FormsGraph extends VBean {
     private IHandler mHandler;
     private Graph m_graph = null;
     private Series graphSeries = null; // handler to the graph series
-    private mViewMouseListener instanceVMListener = null; // reacts to mouse events performed on a graph
+    private GraphViewMouseListener instanceVMListener = null; // reacts to mouse events performed on a graph
     private ViewMouseMotionListener mouseMotionListener = null;
-    private localRelationalData lrd = null;
+    private LocalRelationalData lrd = null;
     private JTextPane NoDataFoundPanel = new JTextPane();
     private ImageIcon emptyGraphImage = null;
     private boolean AddGraphToBean = true;
@@ -204,13 +196,62 @@ public class FormsGraph extends VBean {
     // =========================
     private JFrame jf = null;
     private JPanel glass = null;
-    private String sVersion = "1.0.2";
+    private String sVersion = "1.0.3";
     
     private boolean bAddedFocusListener = false;
-    private ExtendedFrame frmOwnerFrame = null;
+    
+    private HashMap hmPropertyHandlers = new HashMap();
     
     public Graph getGraph() {
       return m_graph;
+    }
+    
+    public LocalRelationalData getLocalRelationalData() {
+      return lrd;
+    }
+    
+    public void setRecoverGraphToVBean(boolean b) {
+      recoverGraphToVBean = b;
+    }
+    
+    public boolean isRecoverGraphToVBean() {
+      return recoverGraphToVBean;
+    }
+    
+    public void setFocusListenerAdded(boolean b) {
+      bAddedFocusListener = b;
+    }
+    
+    public boolean isFocusListenerAdded() {
+      return bAddedFocusListener;
+    }
+    
+    public void removeGraph() {
+      super.remove(0);
+    }
+    
+    public void addGraph() {
+      super.add(m_graph);
+    }
+    
+    public JPanel getGlassPanel() {
+      return glass;
+    }
+    
+    public int getViewListenerCount() {
+      return mViewListenerCount;
+    }
+    
+    public void setViewListenerCount(int iCount) {
+      mViewListenerCount = iCount;
+    }
+    
+    public GraphViewMouseListener getViewMouseListener() {
+      return instanceVMListener;
+    }
+    
+    public void setViewMouseListener(GraphViewMouseListener vml) {
+      instanceVMListener = vml;
     }
 
     public FormsGraph() {
@@ -244,7 +285,7 @@ public class FormsGraph extends VBean {
         debugPrefix = this.getClass().getName();
 
         // instantiate the data store for this graph
-        lrd = new localRelationalData(this);
+        lrd = new LocalRelationalData(this);
 
         /*
          * Test Data allowing you to run this Java Bean in Forms without
@@ -267,11 +308,15 @@ public class FormsGraph extends VBean {
         /* Test Data End */
 
         // ************ set mouse interaction to on **********
-        instanceVMListener = new mViewMouseListener(m_graph, this, lrd);
+        instanceVMListener = new GraphViewMouseListener(m_graph, this, lrd);
         mViewListenerCount = 1;
         // ***************************************************
 
         m_graph.addViewMouseListener(instanceVMListener);
+        
+        hmPropertyHandlers.put(AddDataToGraph.propertyId, new AddDataToGraph());
+        hmPropertyHandlers.put(AddIndexLine.propertyId, new AddIndexLine());
+        hmPropertyHandlers.put(AddRowData.propertyId, new AddRowData());
     }
 
     /**
@@ -310,6 +355,8 @@ public class FormsGraph extends VBean {
      * Long silly if-else...
      * =========================================================================
      */
+    
+    
 
     /**
      * Implementation of IView interface which sets a requested property to a given value
@@ -321,16 +368,10 @@ public class FormsGraph extends VBean {
      */
     public boolean setProperty(ID _ID, Object _object) {
         String sParams = _object == null ? "" : _object.toString();
-        if (_ID == pAddRowData) {
-            return addRowData(sParams);
-        } else if (_ID == pAddIndexLine) {
-            return addIndexLine(sParams);
-        } else if (_ID == pAddReferenceObject) {
-            return addReferenceObject(sParams);
-        } else if (_ID == pAddDataToGraph) {
-            return addDataToGraph(sParams);
-        } else if (_ID == pAlignTitleText) {
-            return alignTitleText(sParams);
+        if (hmPropertyHandlers.containsKey(_ID)) {
+            IFGPropImpl handler = (IFGPropImpl)hmPropertyHandlers.get(_ID);
+            DebugMessage("PropertyHandler was found: " + _ID);
+            return handler.handleProperty(sParams, this);
         } else if (_ID == pClearGraph) {
             return clearGraph(sParams);
         } else if (_ID == pDebug) {
@@ -341,10 +382,6 @@ public class FormsGraph extends VBean {
             return enableMarkerText(sParams);
         } else if (_ID == pEnableGradient) {
             return enableGradient(sParams);
-        } else if (_ID == pEnableTooltips) {
-            return enableTooltips(sParams);
-        } else if (_ID == pExplodePieSlice) {
-            return explodePieSlice(sParams);
         } else if (_ID == pExportToClipboard) {
             return exportToClipboard(sParams);
         } else if (_ID == pFramePos) {
@@ -357,26 +394,12 @@ public class FormsGraph extends VBean {
             return graphInFrame(sParams);
         } else if (_ID == pGraphType) {
             return graphType(sParams);
-        } else if (_ID == pHideAxis) {
-            return hideAxis(sParams);
         } else if (_ID == pHideGraph) {
             return hideGraph(sParams);
         } else if (_ID == pHideFrame) {
             return hideFrame(sParams);
-        } else if (_ID == pMinScaleYAxis) {
-            return minScaleYAxis(sParams);
-        } else if (_ID == pMaxScaleYAxis) {
-            return maxScaleYAxis(sParams);
-        } else if (_ID == pMinScaleY2Axis) {
-            return minScaleY2Axis(sParams);
-        } else if (_ID == pMaxScaleY2Axis) {
-            return maxScaleY2Axis(sParams);
-        } else if (_ID == pMouseAction) {
-            return mouseAction(sParams);
         } else if (_ID == pModifyData) {
             return modifyData(sParams);
-        } else if (_ID == pPositionLegendArea) {
-            return positionLegendArea(sParams);
         } else if (_ID == pRemoveData) {
             return removeData(sParams);
         } else if (_ID == pRemoveTitle) {
@@ -393,10 +416,6 @@ public class FormsGraph extends VBean {
             return resetGraph(sParams);
         } else if (_ID == pReturnValues) {
             return returnValues(sParams);
-        } else if (_ID == pRotateXLabel) {
-            return rotateXLabel(sParams);
-        } else if (_ID == pScrollBar) {
-            return scrollBar(sParams);
         } else if (_ID == pSetLegendBorder) {
             return setLegendBorder(sParams);
         } else if (_ID == pSeriesCount) {
@@ -445,16 +464,10 @@ public class FormsGraph extends VBean {
             return setY1ScaleDown(sParams);
         } else if (_ID == pSetLineGraphMarkers) {
             return setLineGraphMarkers(sParams);
-        } else if (_ID == pSetSeriesMarkerType) {
-            return setSeriesMarkerType(sParams);
-        } else if (_ID == pSetScaledLogarithmic) {
-            return setScaledLogarithmic(sParams);
         } else if (_ID == pSetBaseline) {
             return setBaseline(sParams);
         } else if (_ID == pSetGraphicAntialiasing) {
             return setGraphicAntialiasing(sParams);
-        } else if (_ID == pSetSeriesYAxis) {
-            return setSeriesYAxis(sParams);
         } else if (_ID == pSetYDecimalDigits) {
             return setYDecimalDigits(sParams);
         } else if (_ID == pSetY2DecimalDigits) {
@@ -469,8 +482,6 @@ public class FormsGraph extends VBean {
             return showColumnsAsRows(sParams);
         } else if (_ID == pShowGrid) {
             return showGrid(sParams);
-        } else if (_ID == pShowLabels) {
-            return showLabels(sParams);
         } else if (_ID == pShowLegend) {
             return showLegend(sParams);
         } else if (_ID == pShowPieLabels) {
@@ -493,226 +504,6 @@ public class FormsGraph extends VBean {
      */
 
     /**
-     * Forms property: ADD_ROW_DATA
-     * @param sParams
-     * @return
-     */
-    private boolean addRowData(String sParams) {
-        String sGraphDataRow = null;
-        // get String from Forms Object
-        if (!sParams.equals("")) {
-            sGraphDataRow = sParams;
-            // check if delimiter is used correctly
-            if (sGraphDataRow.indexOf(sDelimiter) > 0) {
-                /*
-                 * Pass string to localRelationalData class. in here the
-                 * string is parsed and ignored if it doesn't contain 4
-                 * parameters and if a number exception occurs. The data
-                 * parameters are of tyle label, label, double and
-                 * finally integer
-                 */
-                if (!lrd.addRelationalDataRow(sGraphDataRow, sDelimiter)) {
-                    DebugMessage("ADD_ROW_DATA: " + sGraphDataRow +
-                                 " not accepted");
-                }
-                return true;
-            } else {
-                DebugMessage("ADD_ROWDATA: No valid string delimiter found. Expected \"" +
-                             sDelimiter + "\"");
-                return true;
-            }
-        } else {
-            DebugMessage("ADD_ROWDATA: No data passed");
-            return true;
-        }
-    }
-
-    /**
-     * Forms property: ADD_INDEX_LINE
-     * @param sParams
-     * @return
-     */
-    private boolean addIndexLine(String sParams) {
-        // defaults
-        String theIndexText = "";
-        String theAxis = "";
-        int theIndexNumber = -1;
-        Color theIndexLineColor = Color.red;
-        double theValue = 0.0;
-        boolean showIndexInLegend = false;
-        int theLineWidth = 1;
-
-        if (sParams.length() > 0) {
-            StringTokenizer stok =
-                new StringTokenizer(sParams, this.sDelimiter);
-            int tokenLength = stok.countTokens();
-
-            DebugMessage("ADD_INDEX_LINE - Arguments received: " + sParams);
-            DebugMessage("ADD_INDEX_LINE - Tokens: " + tokenLength);
-
-            if (tokenLength > 0) {
-                // set Text
-                theIndexText = (String)stok.nextElement();
-            }
-
-            if (tokenLength > 1) {
-                // set visibility
-                if ("true".equalsIgnoreCase(((String)stok.nextElement()).trim())) {
-                    showIndexInLegend = true;
-                    DebugMessage("ADD_INDEX_LINE: Show index line");
-                } else {
-                    showIndexInLegend = false;
-                    DebugMessage("ADD_INDEX_LINE: Don't show index line");
-                }
-            }
-
-            if (tokenLength > 2) {
-                // set axis
-                theAxis = ((String)stok.nextElement()).trim();
-            }
-
-            if (tokenLength > 3) {
-                // set index line - 0 .. 2
-                try {
-                    theIndexNumber =
-                            new Double((String)stok.nextElement()).intValue();
-                } catch (Exception e) {
-                    DebugMessage("ADD_INDEX_LINE: Not a valid index line number. Should be 0 .. 2");
-                    return true;
-                }
-            }
-
-            if (tokenLength > 4) {
-                // set value as double
-                try {
-                    theValue =
-                            new Double((String)stok.nextElement()).doubleValue();
-                } catch (Exception e) {
-                    DebugMessage("ADD_INDEX_LINE: Not a valid index line value. Should be like 1000.00");
-                    return true;
-                }
-
-            }
-
-            if (tokenLength > 5) {
-                // set color
-                Color newColor =
-                    colorCodeRegistry.getColorCode((String)stok.nextElement());
-                theIndexLineColor =
-                        newColor != null ? newColor : theIndexLineColor;
-            }
-
-            if (tokenLength > 6) {
-                try {
-                    theLineWidth =
-                            new Double((String)stok.nextElement()).intValue();
-                } catch (Exception e) {
-                    DebugMessage("ADD_INDEX_LINE: Not a valid value for the index line width");
-                }
-            }
-
-            // putting it all together						
-            ReferenceObject refObj = m_graph.createReferenceObject();
-            refObj.setLineValue(theValue);
-            refObj.setColor(theIndexLineColor);
-            refObj.setDisplayedInLegend(showIndexInLegend);
-            refObj.setText(theIndexText);
-            theLineWidth = theLineWidth > 0 ? theLineWidth : 1;
-            refObj.setLineWidth(theLineWidth);
-            refObj.setLocation(BaseGraphComponent.RO_FRONT);
-
-            if (theAxis.equalsIgnoreCase("x-axis"))
-                refObj.setAssociation(GraphConstants.X1AXIS);
-            if (theAxis.equalsIgnoreCase("X1AXIS"))
-                refObj.setAssociation(GraphConstants.X1AXIS);
-            if (theAxis.equalsIgnoreCase("Y1AXIS"))
-                refObj.setAssociation(GraphConstants.Y1AXIS);
-            if (theAxis.equalsIgnoreCase("Y2AXIS"))
-                refObj.setAssociation(GraphConstants.Y2AXIS);
-            if (theAxis.equalsIgnoreCase("SERIES"))
-                refObj.setAssociation(GraphConstants.SERIES);
-
-
-        } else {
-            DebugMessage("ADD_INDEX_LINE: No valid arguments passed with request");
-        }
-        return true;
-    }
-
-    /**
-     * Forms property: ADD_REFERENCE_OBJECT
-     * @param sParams
-     * @return
-     */
-    private boolean addReferenceObject(String sParams) {
-        if (sParams.length() > 0) {
-            String[] aParams = sParams.split(sDelimiter);
-            DebugMessage("ADD_REFERENCE_OBJECT: Received " + aParams.length +
-                         " parameters.");
-
-            if (aParams.length != 9 && aParams.length != 10) {
-                DebugMessage("ADD_REFERENCE_OBJECT: Incorrect no. of parameters, need 9 for a line and 10 for an area.");
-                return true;
-            }
-
-            ReferenceObject refObj = m_graph.createReferenceObject();
-
-            // Object type
-            refObj.setType(aParams[0].equalsIgnoreCase("AREA") ?
-                           BaseGraphComponent.RO_AREA :
-                           BaseGraphComponent.RO_LINE);
-
-            // Object text
-            refObj.setText(aParams[1]);
-
-            // Association axis
-            if (aParams[2].equalsIgnoreCase("Y1AXIS"))
-                refObj.setAssociation(GraphConstants.Y1AXIS);
-            if (aParams[2].equalsIgnoreCase("Y2AXIS"))
-                refObj.setAssociation(GraphConstants.Y2AXIS);
-            if (aParams[2].equalsIgnoreCase("X1AXIS"))
-                refObj.setAssociation(GraphConstants.X1AXIS);
-            if (aParams[2].equalsIgnoreCase("SERIES"))
-                refObj.setAssociation(GraphConstants.SERIES);
-
-            // Color
-            Color newColor = colorCodeRegistry.getColorCode(aParams[3]);
-            refObj.setColor(newColor != null ? newColor : Color.red);
-
-            // Show in legend
-            refObj.setDisplayedInLegend(aParams[4].equalsIgnoreCase("true"));
-
-            // Line width
-            refObj.setLineWidth(Integer.valueOf(aParams[5]).intValue());
-
-            // Line style
-            if (aParams[6].equalsIgnoreCase("SOLID"))
-                refObj.setLineStyle(BaseGraphComponent.LS_SOLID);
-            if (aParams[6].equalsIgnoreCase("DASH"))
-                refObj.setLineStyle(BaseGraphComponent.LS_DASH);
-            if (aParams[6].equalsIgnoreCase("DOTTED"))
-                refObj.setLineStyle(BaseGraphComponent.LS_DOTTED);
-            if (aParams[6].equalsIgnoreCase("DASH_DOT"))
-                refObj.setLineStyle(BaseGraphComponent.LS_DASH_DOT);
-
-            // Set the reference object to front or back
-            refObj.setLocation(aParams[7].equalsIgnoreCase("FRONT") ?
-                               BaseGraphComponent.RO_FRONT :
-                               BaseGraphComponent.RO_BACK);
-
-            //Object value
-            if (aParams[0].equalsIgnoreCase("AREA")) {
-                refObj.setLowValue(Double.valueOf(aParams[8]).doubleValue());
-                refObj.setHighValue(Double.valueOf(aParams[9]).doubleValue());
-            } else
-                refObj.setLineValue(Double.valueOf(aParams[8]).doubleValue());
-        } else {
-            DebugMessage("ADD_REFERENCE_OBJECT: No valid parameters passed with request.");
-        }
-        return true;
-    }
-
-    /**
      * Forms property: DISPLAY_INDEX_LINE
      * @param sParams
      * @return
@@ -720,122 +511,6 @@ public class FormsGraph extends VBean {
     @Deprecated
     private boolean displayIndexLine(String sParams) {
         DebugMessage("DISPLAY_INDEX_LINE: Method deprecated, don't use it!");
-        return true;
-    }
-
-    /**
-     * Forms property: ADD_DATA_TO_GRAPH
-     * @param sParams
-     * @return
-     */
-    private boolean addDataToGraph(String sParams) {
-        DebugMessage("ADD_DATA_TO_GRAPH: setting data for display");
-        ArrayList al = lrd.getRelationalData();
-        DebugMessage("ADD_DATA_TO_GRAPH: Size of arraylist: " + al.size());
-        // handle no data passed
-        if (al.size() == 0) {
-            DebugMessage("ADD_DATA_TO_GRAPH: decide on the response in the UI");
-            noGraphDataFoundHandler();
-        } else {
-            // if the graph component previously have been removed from
-            // the Graph then it needs to be added back there
-            if (recoverGraphToVBean) {
-                DebugMessage("ADD_DATA_TO_GRAPH: remove component that was added insetad of the graph");
-                super.remove(0);
-                DebugMessage("ADD_DATA_TO_GRAPH: add graph for display");
-                super.add(m_graph);
-                DebugMessage("ADD_DATA_TO_GRAPH: reset flag");
-                recoverGraphToVBean = false;
-            }
-            m_graph.setVisible(true);
-            m_graph.setTabularData(al);
-            // m_graph.setLocalRelationalData(al);
-            
-            if (!bAddedFocusListener) {
-              // Add a keyboardfocuslistener to fix heavy/lightweight problem
-              frmOwnerFrame = getOwnerWindow(this);
-              KeyboardFocusManager focusManager = KeyboardFocusManager.getCurrentKeyboardFocusManager();
-              focusManager.addPropertyChangeListener(
-                new PropertyChangeListener() {
-                  public void propertyChange(PropertyChangeEvent e) {
-                      if (e.getPropertyName().equals("focusOwner") && e.getNewValue() != null && e.getNewValue() instanceof Component) {
-                        glass.setVisible(!isChildFocusOwner(frmOwnerFrame, (Component)e.getNewValue()));
-                      }
-                  }
-                }
-              );
-              bAddedFocusListener = true;
-            }
-        }
-        DebugMessage("ADD_DATA_TO_GRAPH: finished");
-        return true;
-    }
-
-    /**
-     * Forms proerty: ALIGN_TITLE_TEXT
-     * @param sParams
-     * @return
-     */
-    private boolean alignTitleText(String sParams) {
-        String _sObject = sParams;
-        _sObject = handleTokenNullvaluesInStartAndEnd(_sObject);
-
-        StringTokenizer st = new StringTokenizer(_sObject, sDelimiter);
-        int tokenLength = st.countTokens();
-        String firstToken = "", secondToken = "", thirdToken = "";
-
-        DebugMessage("Property ALIGN_TITLE_TEXT has received " + tokenLength +
-                     " tokens and a value of " + sParams);
-
-        if (tokenLength > 0) {
-            firstToken = (String)st.nextElement();
-            String tValue =
-                firstToken.substring(firstToken.toLowerCase().indexOf("title=") +
-                                     6);
-            DebugMessage("ALIGN_TITLE_TEXT: FIRST TOKEN: " + tValue);
-            if ("right".equalsIgnoreCase(tValue)) {
-                m_graph.getDataviewTitle().setHorizontalAlignment(AlignRight);
-            } else if ("left".equalsIgnoreCase(tValue)) {
-                m_graph.getDataviewTitle().setHorizontalAlignment(AlignLeft);
-            } else // center
-            {
-                m_graph.getDataviewTitle().setHorizontalAlignment(AlignCenter);
-            }
-        }
-
-        if (tokenLength > 1) {
-            secondToken = (String)st.nextElement();
-            String tValue =
-                secondToken.substring(secondToken.toLowerCase().indexOf("subtitle=") +
-                                      9);
-            DebugMessage("ALIGN_TITLE_TEXT: SECOND TOKEN: " + tValue);
-
-            if ("right".equalsIgnoreCase(tValue)) {
-                m_graph.getDataviewSubtitle().setHorizontalAlignment(AlignRight);
-            } else if ("left".equalsIgnoreCase(tValue)) {
-                m_graph.getDataviewSubtitle().setHorizontalAlignment(AlignLeft);
-            } else // center
-            {
-                m_graph.getDataviewSubtitle().setHorizontalAlignment(AlignCenter);
-            }
-        }
-
-        if (tokenLength > 2) {
-            thirdToken = (String)st.nextElement();
-            String tValue =
-                thirdToken.substring(thirdToken.toLowerCase().indexOf("footnote=") +
-                                     9);
-            DebugMessage("ALIGN_TITLE_TEXT: THIRD TOKEN: " + tValue);
-
-            if ("right".equalsIgnoreCase(tValue)) {
-                m_graph.getDataviewFootnote().setHorizontalAlignment(AlignRight);
-            } else if ("left".equalsIgnoreCase(tValue)) {
-                m_graph.getDataviewFootnote().setHorizontalAlignment(AlignLeft);
-            } else // center
-            {
-                m_graph.getDataviewFootnote().setHorizontalAlignment(AlignCenter);
-            }
-        }
         return true;
     }
 
@@ -853,242 +528,12 @@ public class FormsGraph extends VBean {
     }
 
     /**
-     * Forms property: MIN_SCALE_Y_AXIS
-     * @param sParams
-     * @return
-     */
-    private boolean minScaleYAxis(String sParams) {
-        if (sParams.length() == 0) {
-            // go read the manual !
-            DebugMessage("MIN_SCALE_Y_AXIS, scaling needs a minimum value to be provided. Please refer to the" +
-                         " documentation on how to use this property.");
-        } else {
-            // exceptions may be raised on the way, so we prep for it
-            try {
-                // check if auto scaling should be enabled
-                if ("AUTO".equalsIgnoreCase(sParams)) {
-                    m_graph.getY1Axis().setAxisMinAutoScaled(true);
-                }
-                // try to set fixed scale
-                else {
-                    int minValue = 0;
-                    minValue = new Double(sParams).intValue();
-                    m_graph.getY1Axis().setAxisMinAutoScaled(false);
-                    m_graph.getY1Axis().setAxisMinValue(minValue);
-                }
-            } catch (NumberFormatException nfe) {
-                DebugMessage("MIN_SCALE_Y_AXIS: Not a valid integer format passed");
-                DebugMessage(nfe.getMessage());
-            }
-        }
-        return true;
-    }
-
-    /**
-     * Forms property: MAX_SCALE_Y_AXIS
-     * @param sParams
-     * @return
-     */
-    private boolean maxScaleYAxis(String sParams) {
-        if (sParams.length() == 0) {
-            // go read the manual !
-            DebugMessage("MAX_SCALE_Y_AXIS, scaling needs a maximum value to be provided. Please refer to the" +
-                         " documentation on how to use this property.");
-        } else {
-            // exceptions may be raised on the way, so we prep for it
-            try {
-                // check if auto scaling should be enabled
-                if ("AUTO".equalsIgnoreCase(sParams)) {
-                    m_graph.getY1Axis().setAxisMaxAutoScaled(true);
-                }
-                // try to set fixed scale
-                else {
-                    int maxValue = 0;
-                    maxValue = new Double(sParams).intValue();
-                    m_graph.getY1Axis().setAxisMaxAutoScaled(false);
-                    m_graph.getY1Axis().setAxisMaxValue(maxValue);
-                }
-            } catch (NumberFormatException nfe) {
-                DebugMessage("MAX_SCALE_Y_AXIS: Not a valid integer format passed");
-                DebugMessage(nfe.getMessage());
-            }
-        }
-        return true;
-    }
-
-    /**
-     * Forms property: MIN_SCALE_Y2_AXIS
-     * @param sParams
-     * @return
-     */
-    private boolean minScaleY2Axis(String sParams) {
-        if (sParams.length() == 0) {
-            // go read the manual !
-            DebugMessage("MIN_SCALE_Y2_AXIS, scaling needs a minimum value to be provided. Please refer to the" +
-                         " documentation on how to use this property.");
-        } else {
-            // exceptions may be raised on the way, so we prep for it
-            try {
-                // check if auto scaling should be enabled
-                if ("AUTO".equalsIgnoreCase(sParams)) {
-                    m_graph.getY2Axis().setAxisMinAutoScaled(true);
-                }
-                // try to set fixed scale
-                else {
-                    int minValue = 0;
-                    minValue = new Double(sParams).intValue();
-                    m_graph.getY2Axis().setAxisMinAutoScaled(false);
-                    m_graph.getY2Axis().setAxisMinValue(minValue);
-                }
-            } catch (NumberFormatException nfe) {
-                DebugMessage("MIN_SCALE_Y2_AXIS: Not a valid integer format passed");
-                DebugMessage(nfe.getMessage());
-            }
-        }
-        return true;
-    }
-
-    /**
-     * Forms property: MAX_SCALE_Y2_AXIS
-     * @param sParams
-     * @return
-     */
-    private boolean maxScaleY2Axis(String sParams) {
-        if (sParams.length() == 0) {
-            // go read the manual !
-            DebugMessage("MAX_SCALE_Y2_AXIS, scaling needs a maximum value to be provided. Please refer to the" +
-                         " documentation on how to use this property.");
-        } else {
-            // exceptions may be raised on the way, so we prep for it
-            try {
-                // check if auto scaling should be enabled
-                if ("AUTO".equalsIgnoreCase(sParams)) {
-                    m_graph.getY2Axis().setAxisMaxAutoScaled(true);
-                }
-                // try to set fixed scale
-                else {
-                    int maxValue = 0;
-                    maxValue = new Double(sParams).intValue();
-                    m_graph.getY2Axis().setAxisMaxAutoScaled(false);
-                    m_graph.getY2Axis().setAxisMaxValue(maxValue);
-                }
-            } catch (NumberFormatException nfe) {
-                DebugMessage("MAX_SCALE_Y2_AXIS: Not a valid integer format passed");
-                DebugMessage(nfe.getMessage());
-            }
-        }
-        return true;
-    }
-
-    /**
      * Forms property: DEBUG
      * @param sParams
      * @return
      */
     private boolean debug(String sParams) {
         bDebugMode = sParams.equalsIgnoreCase("TRUE");
-        return true;
-    }
-
-    /**
-     * Forms property: ENABLE_TOOLTIPS
-     * @param sParams
-     * @return
-     */
-    private boolean enableTooltips(String sParams) {
-        if (!sParams.equals("")) {
-            if ("ALL".equalsIgnoreCase(sParams)) {
-                // this is the default setting and you don't have to do
-                // anything for this
-
-                DebugMessage("ENABLE_TOOLTIPS: setting all tooltips");
-                m_graph.setMarkerTooltipType(Graph.MTT_VALUES_TEXT);
-            }
-            if ("LABELS".equalsIgnoreCase(sParams)) {
-                DebugMessage("ENABLE_TOOLTIPS: setting label tooltips");
-                m_graph.setMarkerTooltipType(Graph.MTT_TEXT);
-
-            } else if ("VALUES".equalsIgnoreCase(sParams)) {
-                DebugMessage("ENABLE_TOOLTIPS: setting value tooltips");
-                m_graph.setMarkerTooltipType(Graph.TLT_MEMBER);
-            } else if ("NONE".equalsIgnoreCase(sParams)) {
-                DebugMessage("ENABLE_TOOLTIPS: disabling tooltips");
-                m_graph.setMarkerTooltipType(Graph.TLT_NONE);
-            } else {
-                DebugMessage("ENABLE_TOOLTIPS: No valid attribute passed. Use ALL, LABELS,VALUES or NONE");
-            }
-
-        } else {
-            DebugMessage("ENABLE_TOOLTIPS: No attribute value passed, thus ignoring");
-        }
-        return true;
-    }
-
-    /**
-     * Moves the selected slice number away from the rest
-     * Forms property: EXPLODE_PIESLICE
-     * @param sParams
-     * @return
-     */
-    private boolean explodePieSlice(String sParams) {
-        // _object contains a delimited String containing values, where
-        // the second value must be between 0 and 100. The first should not exceed
-        // the number of graph columns available or be negative
-
-        if (sParams.length() == 0) {
-            // go read the manual !
-            DebugMessage("EXPLODE_PIESLICE requires attribute passed. please refer to the" +
-                         " documentation on how to use this property.");
-        } else {
-            // some exceptions may be raised on the way, so we prep for it
-            try {
-                StringTokenizer st = new StringTokenizer(sParams, sDelimiter);
-                String[] val = new String[2];
-                int tokenLength = st.countTokens();
-                if (tokenLength != 2) {
-                    // go read the manual !
-                    DebugMessage("EXPLODE_PIESLICE requires attribute passed. please refer to the" +
-                                 " documentation on how to use this property.");
-                } else {
-                    val[0] = (String)st.nextElement();
-                    val[1] = (String)st.nextElement();
-
-                    DebugMessage("EXPLODE_PIESLICE: Attributes passed: " +
-                                 sParams);
-                    DebugMessage("EXPLODE_PIESLICE: After untokenizing String: series=" +
-                                 val[0] + " and explode rate=" + val[1]);
-
-                    int Series = 0;
-                    int ExpRate = 0;
-
-                    Series = (new Double(val[0])).intValue();
-                    ExpRate = (new Double(val[1])).intValue();
-
-                    // if you get here the there wasn't any numeric exceptions check if series is below or over Graph range and adjust if necessary
-                    Series =
-                            (Series < 0 ? 0 : Series > (m_graph.getSeriesObjectCount() -
-                                                        1) ?
-                                              (m_graph.getSeriesObjectCount() -
-                                               1) : Series);
-                    // check explode rate between 0 and 100, if not set
-                    // to edge values
-                    ExpRate =
-                            (ExpRate < 0 ? 0 : (ExpRate > 100 ? 100 : ExpRate));
-
-                    // graphSeries = new Series((CommonGraph)m_graph);
-                    // graphSeries.setPieSliceExplode(ExpRate,Series);
-                    m_graph.getSeries().setPieSliceExplode(ExpRate, Series);
-                }
-            } catch (NumberFormatException nfe) {
-                DebugMessage("EXPLODE_PIESLICE: Not a valid integer format passed");
-                DebugMessage(nfe.getMessage());
-            }
-
-            catch (Exception ex) {
-                ex.printStackTrace();
-            }
-
-        }
         return true;
     }
 
@@ -1280,41 +725,6 @@ public class FormsGraph extends VBean {
     }
 
     /**
-     * Forms property: MOUSE_ACTION
-     * @param sParams
-     * @return
-     */
-    private boolean mouseAction(String sParams) {
-        if ("TRUE".equalsIgnoreCase(sParams)) {
-            /*
-			 * only one instance of the mouse view listsner is allowed
-			 * for this object. If there exists an instance of this
-			 * listener type, then all other registration attempts are
-			 * ignored
-			 */
-
-            if (mViewListenerCount == 0) {
-                instanceVMListener =
-                        new mViewMouseListener(m_graph, this, lrd);
-                DebugMessage("MOUSE_ACTION: Adding mouse listener");
-                m_graph.addViewMouseListener(instanceVMListener);
-                ++mViewListenerCount;
-            }
-        } else if ("FALSE".equalsIgnoreCase(sParams)) {
-            if (mViewListenerCount != 0) {
-                DebugMessage("MOUSE_ACTION: Removing mouse listener");
-                m_graph.removeViewMouseListener(instanceVMListener);
-                mViewListenerCount = 0;
-            }
-        } else {
-            // ignore
-            DebugMessage("Property MOUSE_ACTION: " + sParams +
-                         " passed but TRUE or FALSE required. Ignoring command!");
-        }
-        return true;
-    }
-
-    /**
      * Forms property: MODIFY_DATA
      * @param sParams
      * @return
@@ -1331,54 +741,6 @@ public class FormsGraph extends VBean {
             }
         } else {
             DebugMessage("MODIFY_DATA: No values passed with request. Statement ignored");
-        }
-        return true;
-    }
-
-    /**
-     * Forms property: POSITION_LEGEND
-     * @param sParams
-     * @return
-     */
-    private boolean positionLegendArea(String sParams) {
-        if (!sParams.equals("")) {
-            DebugMessage("POSITION_LEGEND: position legend to " + sParams);
-            if ("AUTO".equalsIgnoreCase(sParams)) {
-                LegendArea legend = m_graph.getLegendArea();
-                legend.setAutomaticPlacement(BaseGraphComponent.AP_ALWAYS);
-            } else {
-                if ("LEFT".equalsIgnoreCase(sParams)) {
-                    // first, turn off automatic placement
-                    LegendArea legend = m_graph.getLegendArea();
-                    legend.setAutomaticPlacement(BaseGraphComponent.AP_NEVER);
-                    // set the position to the left edge
-                    legend.setPosition(BaseGraphComponent.LAP_LEFT);
-                } else if ("RIGHT".equalsIgnoreCase(sParams)) {
-                    // first, turn off automatic placement
-                    LegendArea legend = m_graph.getLegendArea();
-                    legend.setAutomaticPlacement(BaseGraphComponent.AP_NEVER);
-                    // set the position to the right edge
-                    legend.setPosition(BaseGraphComponent.LAP_RIGHT);
-                } else if ("TOP".equalsIgnoreCase(sParams)) {
-                    // first, turn off automatic placement
-                    LegendArea legend = m_graph.getLegendArea();
-                    legend.setAutomaticPlacement(BaseGraphComponent.AP_NEVER);
-                    // set the position to the top edge
-                    legend.setPosition(BaseGraphComponent.LAP_TOP);
-                } else if ("BOTTOM".equalsIgnoreCase(sParams)) {
-                    // first, turn off automatic placement
-                    LegendArea legend = m_graph.getLegendArea();
-                    legend.setAutomaticPlacement(BaseGraphComponent.AP_NEVER);
-                    // set the position to the bottom edge
-                    legend.setPosition(BaseGraphComponent.LAP_BOTTOM);
-
-                } else {
-                    DebugMessage("POSITION_LEGEND: value " + sParams +
-                                 " passed does not represent a valid argument");
-                }
-            }
-        } else {
-            DebugMessage("POSITION_LEGEND: No value passed. Pass LEFT,TOP,BOTTOM,RIGHT,AUTO as an argument when calling set_custom_property()");
         }
         return true;
     }
@@ -1423,62 +785,6 @@ public class FormsGraph extends VBean {
     }
 
     /**
-     * Forms property: ROTATE_X_LABEL
-     * @param sParams
-     * @return
-     */
-    private boolean rotateXLabel(String sParams) {
-        if (!sParams.equals("")) {
-            String RotationAngle = sParams;
-            DebugMessage("ROTATE_X_LABEL: Trying to rotate the X Axis Tick Label " +
-                         sParams);
-            if ("90".equalsIgnoreCase(RotationAngle)) {
-                // Rotate the X Axis Tick Label to 90
-                m_graph.getO1TickLabel().setAutomaticRotation(BaseGraphComponent.AR_NO_ROTATE);
-                m_graph.getO1TickLabel().setTextRotation(BaseGraphComponent.TR_HORIZ_ROTATE_90);
-                DebugMessage("ROTATE_X_LABEL: Successful - " + sParams);
-            } else if ("270".equalsIgnoreCase(RotationAngle)) {
-                // Rotate the X Axis Tick Label to 270
-                m_graph.getO1TickLabel().setAutomaticRotation(BaseGraphComponent.AR_NO_ROTATE);
-                m_graph.getO1TickLabel().setTextRotation(BaseGraphComponent.TR_HORIZ_ROTATE_270);
-            } else if ("0".equalsIgnoreCase(RotationAngle)) {
-                // Rotate the X Axis Tick Label to 0
-                m_graph.getO1TickLabel().setAutomaticRotation(BaseGraphComponent.AR_NO_ROTATE);
-                m_graph.getO1TickLabel().setTextRotation(BaseGraphComponent.TR_HORIZ);
-            } else {
-                DebugMessage("ROTATE_X_LABEL: No valid values for Tick Label Rotation. Expected 0,90,270");
-            }
-        } else {
-            DebugMessage("ROTATE_X_LABEL: No valid values for Tick Label Rotation. Expected 0,90,270");
-        }
-        return true;
-    }
-
-    /**
-     * Forms property: SCROLLBAR
-     * @param sParams
-     * @return
-     */
-    private boolean scrollBar(String sParams) {
-        if (!sParams.equals("")) {
-            DebugMessage("SCROLLBAR: setting value to " + sParams);
-            if ("TRUE".equalsIgnoreCase(sParams)) {
-                m_graph.setScrollbarPresenceGroups(Graph.SP_AS_NEEDED);
-            } else if ("FALSE".equalsIgnoreCase(sParams)) {
-                // disabling scrollbars
-                m_graph.setScrollbarPresenceGroups(Graph.SP_NEVER);
-            } else {
-                DebugMessage("SCROLLBAR: value " + sParams +
-                             " does not contain TRUE or FALSE");
-            }
-
-        } else {
-            DebugMessage("SCROLLBAR: no value associated with command");
-        }
-        return true;
-    }
-
-    /**
      * Forms property: SET_LEGEND_BORDER
      * @param sParams
      * @return
@@ -1505,7 +811,7 @@ public class FormsGraph extends VBean {
                     } else {
                         DebugMessage("SET_LEGEND_BORDER: Border color value = " +
                                      brdColor);
-                        brdC = colorCodeRegistry.getColorCode(brdColor);
+                        brdC = ColorCodeRegistry.getColorCode(brdColor);
                         m_graph.getLegendArea().setBorderColor(brdC);
                     }
                     break;
@@ -1516,7 +822,7 @@ public class FormsGraph extends VBean {
                     } else {
                         DebugMessage("SET_LEGEND_BORDER: Background color value = " +
                                      bgColor);
-                        bgC = colorCodeRegistry.getColorCode(bgColor);
+                        bgC = ColorCodeRegistry.getColorCode(bgColor);
                         m_graph.getLegendArea().setFillColor(bgC);
                     }
                     break;
@@ -1558,7 +864,7 @@ public class FormsGraph extends VBean {
      */
     private boolean setBackgroundColor(String sParams) {
         if (!sParams.equals("")) {
-            Color col = colorCodeRegistry.getColorCode(sParams);
+            Color col = ColorCodeRegistry.getColorCode(sParams);
             if (col != null) {
                 DebugMessage("SET_BACKGROUND_COLOR: setting " + sParams +
                              " as a new background color");
@@ -1583,7 +889,7 @@ public class FormsGraph extends VBean {
      */
     private boolean setPlotAreaColor(String sParams) {
         if (!sParams.equals("")) {
-            Color col = colorCodeRegistry.getColorCode(sParams);
+            Color col = ColorCodeRegistry.getColorCode(sParams);
             if (col != null) {
                 DebugMessage("SET_PLOT_AREA_COLOR: setting " + sParams +
                              " as a new plot area color");
@@ -1606,7 +912,7 @@ public class FormsGraph extends VBean {
      */
     private boolean setTitleBackgroundColor(String sParams) {
         if (!sParams.equals("")) {
-            Color col = colorCodeRegistry.getColorCode(sParams);
+            Color col = ColorCodeRegistry.getColorCode(sParams);
             if (col != null) {
                 DebugMessage("SET_TITLE_BACKGROUND: setting " + sParams +
                              " as a new background color");
@@ -1629,7 +935,7 @@ public class FormsGraph extends VBean {
      */
     private boolean setSubtitleBackgroundColor(String sParams) {
         if (!sParams.equals("")) {
-            Color col = colorCodeRegistry.getColorCode(sParams);
+            Color col = ColorCodeRegistry.getColorCode(sParams);
             if (col != null) {
                 DebugMessage("SET_SUBTITLE_BACKGROUND: setting " + sParams +
                              " as a new background color");
@@ -1663,7 +969,7 @@ public class FormsGraph extends VBean {
                 String seriesName =
                     sParams.substring(0, sParams.indexOf(this.sDelimiter));
 
-                Color col = colorCodeRegistry.getColorCode(strColor);
+                Color col = ColorCodeRegistry.getColorCode(strColor);
                 if (col != null) {
                     DebugMessage("SET_SERIES_COLOR: setting " + strColor +
                                  " as a new series color");
@@ -1800,7 +1106,7 @@ public class FormsGraph extends VBean {
      */
     private boolean setFooterBackgroundColor(String sParams) {
         if (!sParams.equals("")) {
-            Color col = colorCodeRegistry.getColorCode(sParams);
+            Color col = ColorCodeRegistry.getColorCode(sParams);
             if (col != null) {
                 DebugMessage("SET_FOOTER_BACKGROUND: setting " + sParams +
                              " as a new background color");
@@ -1944,7 +1250,7 @@ public class FormsGraph extends VBean {
             if (mo.length > 2) {
                 m_graph.getDataviewTitle().setForeground((Color)mo[2]);
             }
-            m_graph.getDataviewTitle().setHorizontalAlignment(AlignCenter);
+            m_graph.getDataviewTitle().setHorizontalAlignment(SwingConstants.CENTER);
         } else {
             DebugMessage("Property SET_TITLE: No attributes passed");
         }
@@ -1974,7 +1280,7 @@ public class FormsGraph extends VBean {
             m_graph.getDataviewSubtitle().setFont((Font)mo[1]);
             m_graph.getDataviewSubtitle().setForeground((Color)mo[2]);
             m_graph.getDataviewSubtitle().setVisible(true);
-            m_graph.getDataviewSubtitle().setHorizontalAlignment(AlignCenter);
+            m_graph.getDataviewSubtitle().setHorizontalAlignment(SwingConstants.CENTER);
         } else {
             DebugMessage("SET_SUBTITLE: no attributes passed");
         }
@@ -1994,7 +1300,7 @@ public class FormsGraph extends VBean {
             m_graph.getDataviewFootnote().setFont((Font)mo[1]);
             m_graph.getDataviewFootnote().setForeground((Color)mo[2]);
             m_graph.getDataviewFootnote().setVisible(true);
-            m_graph.getDataviewFootnote().setHorizontalAlignment(AlignCenter);
+            m_graph.getDataviewFootnote().setHorizontalAlignment(SwingConstants.CENTER);
         } else {
             DebugMessage("SET_FOOTER: no attributes passed");
         }
@@ -2227,41 +1533,6 @@ public class FormsGraph extends VBean {
     }
 
     /**
-     * Forms property: SHOW_LABELS
-     * @param sParams
-     * @return
-     */
-    private boolean showLabels(String sParams) {
-        String _sObject = sParams;
-        _sObject = handleTokenNullvaluesInStartAndEnd(_sObject);
-        StringTokenizer st = new StringTokenizer(_sObject, sDelimiter);
-        int tokenLength = st.countTokens();
-        String firstToken = "", secondToken = "";
-
-        DebugMessage("SHOW_LABELS has received " + tokenLength +
-                     " tokens and a value of " + sParams);
-
-        if (tokenLength > 0) {
-            firstToken = (String)st.nextElement();
-            String txValue =
-                firstToken.substring(firstToken.indexOf("x=") + 2);
-            DebugMessage("SHOW_LABELS: FIRST TOKEN: " + txValue);
-            m_graph.getX1Axis().setVisible(txValue.equalsIgnoreCase("FALSE") ?
-                                           false : true);
-        }
-        if (tokenLength > 1) {
-            secondToken = (String)st.nextElement();
-            String ty1Value =
-                secondToken.substring(secondToken.indexOf("y1=") + 3);
-            DebugMessage("SHOW_LABELS: SECOND TOKEN: " + ty1Value);
-            m_graph.getY1Axis().setVisible(ty1Value.equalsIgnoreCase("FALSE") ?
-                                           false : true);
-        }
-
-        return true;
-    }
-
-    /**
      * Forms property: SHOW_LEGEND
      * @param sParams
      * @return
@@ -2328,65 +1599,6 @@ public class FormsGraph extends VBean {
     }
 
     /**
-     * Forms property: HIDE_AXIS
-     * @param sParams
-     * @return
-     */
-    private boolean hideAxis(String sParams) {
-        if (sParams.length() > 0) {
-            boolean X1 = true;
-            boolean Y1 = true;
-            boolean Y2 = true;
-            //boolean bIsVisible;
-            int iTickStyle = -1;
-
-            // check if argument passed contains X, Y1 or Y2
-            String args = sParams == null ? "" : sParams.toUpperCase();
-            if (args.indexOf("X") > -1) {
-                X1 = false;
-            } else {
-                X1 = true;
-            }
-            if (args.indexOf("Y1") > -1) {
-                Y1 = false;
-            } else {
-                Y1 = true;
-            }
-            if (args.indexOf("Y2") > -1) {
-                Y2 = false;
-            } else {
-                Y2 = true;
-            }
-
-            iTickStyle = m_graph.getY1MajorTick().getTickStyle();
-            //bIsVisible = m_graph.getY1MajorTick().isVisible(); // Deprecated
-            m_graph.getY1Axis().setVisible(Y1);
-            //m_graph.getY1MajorTick().setVisible(bIsVisible); // Deprecated
-            m_graph.getY1MajorTick().setTickStyle(iTickStyle);
-
-            iTickStyle = m_graph.getY2MajorTick().getTickStyle();
-            //bIsVisible = m_graph.getY2MajorTick().isVisible(); // Deprecated
-            m_graph.getY2Axis().setVisible(Y2);
-            //m_graph.getY2MajorTick().setVisible(bIsVisible); // Deprecated
-            m_graph.getY2MajorTick().setTickStyle(iTickStyle);
-
-            iTickStyle = m_graph.getO1MajorTick().getTickStyle();
-            //bIsVisible = m_graph.getO1MajorTick().isVisible(); // Deprecated
-            m_graph.getO1Axis().setVisible(X1);
-            //m_graph.getO1MajorTick().setVisible(bIsVisible); // Deprecated
-            m_graph.getO1MajorTick().setTickStyle(iTickStyle);
-        } else {
-            DebugMessage("HIDE_AXIS: No arguments passed, thus showing all axis labels.");
-
-            // Show all axis labels
-            m_graph.getY1Axis().setVisible(true);
-            m_graph.getY2Axis().setVisible(true);
-            m_graph.getO1Axis().setVisible(true);
-        }
-        return true;
-    }
-
-    /**
      * Forms property: SET_LINEGRAPH_MARKER
      * @param sParams
      * @return
@@ -2396,161 +1608,6 @@ public class FormsGraph extends VBean {
                      " as an argument");
         boolean bEnable = sParams.equalsIgnoreCase("FALSE") ? false : true;
         m_graph.setMarkerDisplayed(bEnable);
-        return true;
-    }
-
-    /**
-     * Forms property: SET_SERIES_MARKER_TYPE
-     * @param sParams
-     * @return
-     */
-    private boolean setSeriesMarkerType(String sParams) {
-        if (sParams.length() > 0) {
-            // separate series name from string
-            StringTokenizer st = new StringTokenizer(sParams, this.sDelimiter);
-            // at least two arguments must be found
-            if (st.countTokens() >= 2) {
-                String seriesType =
-                    sParams.substring(sParams.indexOf(this.sDelimiter) + 1);
-                String seriesName =
-                    sParams.substring(0, sParams.indexOf(this.sDelimiter)).trim();
-
-                int series_type;
-                if ("MT_AREA".equalsIgnoreCase(seriesType))
-                    series_type = BaseGraphComponent.MT_AREA;
-                else if ("MT_BAR".equalsIgnoreCase(seriesType))
-                    series_type = BaseGraphComponent.MT_BAR;
-                else if ("MT_MARKER".equalsIgnoreCase(seriesType))
-                    series_type = BaseGraphComponent.MT_MARKER;
-                else if ("MT_DEFAULT".equalsIgnoreCase(seriesType))
-                    series_type = BaseGraphComponent.MT_DEFAULT;
-                else {
-                    DebugMessage("Property SET_SERIES_MARKER_TYPE: " +
-                                 sParams +
-                                 " does not contain a valid marker type");
-                    return true;
-                }
-
-                int series_count = 0;
-
-                try {
-                    series_count = m_graph.getColumnCount();
-                } catch (EdgeOutOfRangeException ex) {
-                    DebugMessage("SET_SERIES_MARKER_TYPE: " + ex);
-                    return true;
-                }
-
-                for (int i = 0; i < series_count; i++) {
-                    String shortLabel = "";
-                    try {
-                        shortLabel =
-                                (String)m_graph.getDataAccessSliceLabel(DataDirector.COLUMN_EDGE,
-                                                                        i,
-                                                                        MetadataMap.METADATA_LONGLABEL);
-                    } catch (SliceOutOfRangeException ex) {
-                        DebugMessage("SET_SERIES_MARKER_TYPE: " + ex);
-                        return true;
-                    } catch (EdgeOutOfRangeException ex) {
-                        DebugMessage("SET_SERIES_MARKER_TYPE: " + ex);
-                        return true;
-                    }
-                    if (seriesName.equalsIgnoreCase(shortLabel.trim())) {
-                        try {
-                            m_graph.getSeries().setMarkerType(series_type, i);
-                            DebugMessage("Property SET_SERIES_MARKER_TYPE: Series '" +
-                                         seriesName + "' found");
-                            break;
-                        } catch (SeriesOutOfRangeException sour) {
-                            DebugMessage("Property SET_SERIES_MARKER_TYPE: Series out of range exception");
-                            return true;
-                        }
-                    }
-                }
-                return true;
-            } else {
-                DebugMessage("SET_SERIES_MARKER_TYPE: not enough arguments specified in " +
-                             sParams);
-                return true;
-            }
-        } else {
-            DebugMessage("SET_SERIES_MARKER_TYPE: no argument specified");
-            return true;
-        }
-    }
-
-    /**
-     * Forms property: SET_SCALED_LOGARITHMIC
-     * @param sParams
-     * @return
-     */
-    private boolean setScaledLogarithmic(String sParams) {
-        if (!sParams.equals("")) {
-            sParams = handleTokenNullvaluesInStartAndEnd(sParams);
-            StringTokenizer st = new StringTokenizer(sParams, sDelimiter);
-            int tokenLength = st.countTokens();
-            String axis = "";
-            String enable = "false";
-            double base = 0; // unrealistic initial value
-
-            // parse string of arguments
-            for (int i = 0; i < tokenLength && i < 3; i++) {
-                switch (i) {
-                    // axis is Y or X
-                case 0:
-                    axis = (String)st.nextElement();
-                    break;
-                    // enable id true or false
-                case 1:
-                    enable = (String)st.nextElement();
-                    break;
-                    // value is double or nothing
-                case 2:
-                    try {
-                        base =
-(new Double((String)st.nextElement())).doubleValue();
-                    } catch (NumberFormatException nfe) {
-                        DebugMessage("SET_SCALED_LOGARITHMIC: argument specified as base cannot be parsed to double! Argument ignored");
-                    }
-                    break;
-                default:
-                    break;
-                }
-            }
-
-            // set axis values
-            if ("Y".equalsIgnoreCase(axis)) {
-                if ("FALSE".equalsIgnoreCase(enable)) {
-                    DebugMessage("SET_SCALED_LOGARITHMIC: disabling logarithmic scale for Y axis");
-                    m_graph.getY1Axis().setScaledLogarithmic(false);
-                } else {
-                    DebugMessage("SET_SCALED_LOGARITHMIC: enabling logarithmic scale for Y axis");
-                    m_graph.getY1Axis().setScaledLogarithmic(true);
-                    if (base != 0) {
-                        DebugMessage("SET_SCALED_LOGARITHMIC: setting base to " +
-                                     base);
-                        m_graph.getY1Axis().setLogarithmicBase(base);
-                    }
-                }
-            } else if ("X".equalsIgnoreCase(axis)) {
-                if ("FALSE".equalsIgnoreCase(enable)) {
-                    DebugMessage("SET_SCALED_LOGARITHMIC: disabling logarithmic scale for X axis");
-                    m_graph.getX1Axis().setScaledLogarithmic(false);
-                } else {
-                    DebugMessage("SET_SCALED_LOGARITHMIC: enabling logarithmic scale for X axis");
-                    m_graph.getX1Axis().setScaledLogarithmic(true);
-                    if (base != 0) {
-                        DebugMessage("SET_SCALED_LOGARITHMIC: setting base to " +
-                                     base);
-                        m_graph.getX1Axis().setLogarithmicBase(base);
-                    }
-                }
-            } else {
-                DebugMessage("SET_SCALED_LOGARITHMIC: not a valid Axis identifier!");
-            }
-
-        } else {
-            DebugMessage("SET_SCALED_LOGARITHMIC: no arguments passed with call to set property. Statement ignored!");
-        }
         return true;
     }
 
@@ -2645,63 +1702,6 @@ public class FormsGraph extends VBean {
         //m_graph.addViewMouseListener(instanceVMListener);
         //m_graph.addViewMouseMotionListener(mouseMotionListener);
         return true;
-    }
-
-    /**
-     * Forms property: SET_SERIES_Y_AXIS
-     * @param sParams
-     * @return
-     */
-    private boolean setSeriesYAxis(String sParams) {
-        if (sParams.length() > 0) {
-            try {
-                // separate series name from string
-                StringTokenizer st =
-                    new StringTokenizer(sParams, this.sDelimiter);
-                // at least two arguments must be found
-                if (st.countTokens() >= 2) {
-                    String seriesYAxis =
-                        sParams.substring(sParams.indexOf(this.sDelimiter) +
-                                          1);
-                    String seriesName =
-                        sParams.substring(0, sParams.indexOf(this.sDelimiter)).trim();
-                    int series_count = m_graph.getColumnCount();
-                    DebugMessage("SET_SERIES_Y_AXIS: Looking for a series named '" +
-                                 seriesName + "'...");
-                    for (int i = 0; i < series_count; i++) {
-                        String shortLabel =
-                            (String)m_graph.getDataAccessSliceLabel(DataDirector.COLUMN_EDGE,
-                                                                    i,
-                                                                    MetadataMap.METADATA_LONGLABEL);
-                        if (seriesName.equalsIgnoreCase(shortLabel.trim())) {
-                            // m_graph.getSeries().setAssignedToY2(!m_graph.getSeries().isAssignedToY2(i),i);
-                            m_graph.getSeries().setAssignedToY2("Y2".equalsIgnoreCase(seriesYAxis),
-                                                                i);
-                            DebugMessage("SET_SERIES_Y_AXIS: Series '" +
-                                         seriesName + "' found");
-                            break;
-                        }
-                    }
-                    return true;
-                } else {
-                    DebugMessage("SET_SERIES_Y_AXIS: not enough arguments specified in " +
-                                 sParams);
-                    return true;
-                }
-            } catch (EdgeOutOfRangeException ex) {
-                DebugMessage("SET_SERIES_Y_AXIS: " + ex);
-                return true;
-            } catch (SeriesOutOfRangeException ex) {
-                DebugMessage("SET_SERIES_Y_AXIS: " + ex);
-                return true;
-            } catch (SliceOutOfRangeException ex) {
-                DebugMessage("SET_SERIES_Y_AXIS: " + ex);
-                return true;
-            }
-        } else {
-            DebugMessage("SET_SERIES_Y_AXIS: no argument specified");
-            return true;
-        }
     }
 
     /**
@@ -2836,7 +1836,7 @@ public class FormsGraph extends VBean {
             // call graphTypeAnalyzer.analyze() to determine the int
             // representation of the graph.
             // 0 is returned if no matching BI Graph is registerd for Forms
-            iGraphType = graphTypeRegistry.getTypeForString((String)type);
+            iGraphType = GraphTypeRegistry.getTypeForString((String)type);
 
             DebugMessage("getInternalGraphType(): type returned for " + type +
                          " = " + iGraphType);
@@ -2854,7 +1854,7 @@ public class FormsGraph extends VBean {
         return iGraphType;
     }
 
-    protected void DebugMessage(String dm) {
+    public void DebugMessage(String dm) {
         // if debug enabled then print message to system out
         if (bDebugMode) {
             System.out.println(debugPrefix + " " + dm);
@@ -2954,8 +1954,7 @@ public class FormsGraph extends VBean {
                 break;
                 // Font color
             case 1:
-                fontCol =
-                        colorCodeRegistry.getColorCode((String)tokens.nextElement());
+                fontCol = ColorCodeRegistry.getColorCode((String)tokens.nextElement());
                 fontCol = (fontCol != null ? fontCol : Color.black);
                 DebugMessage("getFontFromString(): Color =" +
                              fontCol.toString());
@@ -2999,7 +1998,7 @@ public class FormsGraph extends VBean {
         return fontProperties;
     }
 
-    private String handleTokenNullvaluesInStartAndEnd(String in) {
+    public String handleTokenNullvaluesInStartAndEnd(String in) {
         DebugMessage("Method: handleTokenNullValuesInStartAndEnd received: " +
                      in);
 
@@ -3026,7 +2025,7 @@ public class FormsGraph extends VBean {
      * private void handleZerodDataFound() adds teh user defined response to the
      * Graph Bean that shows when no data was passed to the graph
      */
-    private void noGraphDataFoundHandler() {
+    public void noGraphDataFoundHandler() {
         // remove Graph from container
         super.remove(0);
         // Create message panel

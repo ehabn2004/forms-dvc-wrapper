@@ -22,9 +22,9 @@ import oracle.dss.graph.Graph;
  * The main use of this registry is to limit the number of supported Graphs in Forms. To add
  * additional graph types, just add the graph type definition to this class
  */
-public abstract class graphTypeRegistry
+public abstract class GraphTypeRegistry
 {
-  public graphTypeRegistry()
+  public GraphTypeRegistry()
   {
   }
 
