@@ -19,7 +19,7 @@ import java.util.StringTokenizer;
  * the graph data use the getRelationalData() method. Data is passed as a String delimited string,
  * containing two lables and one label value
  */
-public class localRelationalData
+public class LocalRelationalData
 {
 
   FormsGraph mfg= null;
@@ -28,7 +28,7 @@ public class localRelationalData
   // Store for PrimaryKey references
   ArrayList<Object> aPrimKeys  = new ArrayList<Object>();
 
-  public localRelationalData(FormsGraph fg)
+  public LocalRelationalData(FormsGraph fg)
   {
     // set a handle to the FormsGraph instance
     mfg = fg;

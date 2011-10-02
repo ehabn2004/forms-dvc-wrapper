@@ -17,7 +17,7 @@ import java.lang.Exception;
 
 import java.util.StringTokenizer;
 
-public abstract class colorCodeRegistry
+public abstract class ColorCodeRegistry
 {
 
 

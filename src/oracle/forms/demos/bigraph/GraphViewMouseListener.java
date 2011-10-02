@@ -37,16 +37,16 @@ import oracle.dss.util.SliceOutOfRangeException;
  * mViewMouseListener implements ViewMouseListener, handling mouse events
  * in the BI Graph
  */
-public class mViewMouseListener implements ViewMouseListener, ActionListener
+public class GraphViewMouseListener implements ViewMouseListener, ActionListener
 {
   Graph m_graph=null;
   FormsGraph mfg = null;
-  localRelationalData mlrd = null;
+  LocalRelationalData mlrd = null;
   
   private ViewMouseEvent objEvent = null;
   private Timer objTimer = null;
 
-  public mViewMouseListener(Graph g, FormsGraph fg, localRelationalData lrd)
+  public GraphViewMouseListener(Graph g, FormsGraph fg, LocalRelationalData lrd)
   {
     m_graph=g;
     mfg = fg;
