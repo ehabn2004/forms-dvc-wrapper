@@ -1,14 +1,11 @@
 package com.bincsoft.forms.dvc.properties.formsgraph;
 
-import com.bincsoft.forms.dvc.FormsGraph;
+import com.bincsoft.forms.BincsoftBean;
 
-
-public class HideAxis implements IFormsGraphProperty {
-    public HideAxis() {
-        super();
-    }
-
-    public boolean handleProperty(String sParams, FormsGraph graph) {
+public class HideAxis extends FormsGraphPropertyHandler {
+    @Override
+    public boolean handleProperty(String sParams, BincsoftBean bean) {
+        super.handleProperty(sParams, bean);
         if (sParams.length() > 0) {
             boolean X1 = true;
             boolean Y1 = true;
@@ -52,7 +49,7 @@ public class HideAxis implements IFormsGraphProperty {
             //m_graph.getO1MajorTick().setVisible(bIsVisible); // Deprecated
             graph.getGraph().getO1MajorTick().setTickStyle(iTickStyle);
         } else {
-            graph.debugMessage("HIDE_AXIS: No arguments passed, thus showing all axis labels.");
+            log("HIDE_AXIS: No arguments passed, thus showing all axis labels.");
 
             // Show all axis labels
             graph.getGraph().getY1Axis().setVisible(true);

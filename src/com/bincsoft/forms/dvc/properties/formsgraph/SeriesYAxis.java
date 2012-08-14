@@ -1,7 +1,7 @@
 package com.bincsoft.forms.dvc.properties.formsgraph;
 
 
-import com.bincsoft.forms.dvc.FormsGraph;
+import com.bincsoft.forms.BincsoftBean;
 
 import java.util.StringTokenizer;
 
@@ -11,13 +11,11 @@ import oracle.dss.util.MetadataMap;
 import oracle.dss.util.SeriesOutOfRangeException;
 import oracle.dss.util.SliceOutOfRangeException;
 
-public class SeriesYAxis implements IFormsGraphProperty {
-    public SeriesYAxis() {
-        super();
-    }
 
-    public boolean handleProperty(String sParams, FormsGraph graph) {
-        if (sParams.length() > 0) {
+public class SeriesYAxis extends FormsGraphPropertyHandler {
+    @Override
+    public boolean handleProperty(String sParams, BincsoftBean bean) {
+        if (super.handleProperty(sParams, bean)) {
             try {
                 // separate series name from string
                 StringTokenizer st =
@@ -30,7 +28,7 @@ public class SeriesYAxis implements IFormsGraphProperty {
                     String seriesName =
                         sParams.substring(0, sParams.indexOf(graph.getDelimiter())).trim();
                     int series_count = graph.getGraph().getColumnCount();
-                    graph.debugMessage("SET_SERIES_Y_AXIS: Looking for a series named '" +
+                    log("SET_SERIES_Y_AXIS: Looking for a series named '" +
                                        seriesName + "'...");
                     for (int i = 0; i < series_count; i++) {
                         String shortLabel =
@@ -41,29 +39,29 @@ public class SeriesYAxis implements IFormsGraphProperty {
                             // m_graph.getSeries().setAssignedToY2(!m_graph.getSeries().isAssignedToY2(i),i);
                             graph.getGraph().getSeries().setAssignedToY2("Y2".equalsIgnoreCase(seriesYAxis),
                                                                          i);
-                            graph.debugMessage("SET_SERIES_Y_AXIS: Series '" +
+                            log("SET_SERIES_Y_AXIS: Series '" +
                                                seriesName + "' found");
                             break;
                         }
                     }
                     return true;
                 } else {
-                    graph.debugMessage("SET_SERIES_Y_AXIS: not enough arguments specified in " +
+                    log("SET_SERIES_Y_AXIS: not enough arguments specified in " +
                                        sParams);
                     return true;
                 }
             } catch (EdgeOutOfRangeException ex) {
-                graph.debugMessage("SET_SERIES_Y_AXIS: " + ex);
+                log("SET_SERIES_Y_AXIS: " + ex);
                 return true;
             } catch (SeriesOutOfRangeException ex) {
-                graph.debugMessage("SET_SERIES_Y_AXIS: " + ex);
+                log("SET_SERIES_Y_AXIS: " + ex);
                 return true;
             } catch (SliceOutOfRangeException ex) {
-                graph.debugMessage("SET_SERIES_Y_AXIS: " + ex);
+                log("SET_SERIES_Y_AXIS: " + ex);
                 return true;
             }
         } else {
-            graph.debugMessage("SET_SERIES_Y_AXIS: no argument specified");
+            log("SET_SERIES_Y_AXIS: no argument specified");
             return true;
         }
     }

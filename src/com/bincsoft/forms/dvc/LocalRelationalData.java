@@ -1,7 +1,10 @@
 package com.bincsoft.forms.dvc;
 
+
 import java.util.ArrayList;
 import java.util.StringTokenizer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * This class handles data operations for the Graph Bean. To retrieve the ArrayList containing
@@ -9,16 +12,13 @@ import java.util.StringTokenizer;
  * containing two lables and one label value
  */
 public class LocalRelationalData {
-
-    FormsGraph mfg = null;
+    Logger log = Logger.getLogger(getClass().getName());
     // Store for the data passed to the BI Graph
     ArrayList<Object> aDataStore = new ArrayList<Object>();
     // Store for PrimaryKey references
     ArrayList<Object> aPrimKeys = new ArrayList<Object>();
 
-    public LocalRelationalData(FormsGraph fg) {
-        // set a handle to the FormsGraph instance
-        mfg = fg;
+    public LocalRelationalData() {
     }
 
     /**
@@ -27,11 +27,11 @@ public class LocalRelationalData {
      * one String value representing the primary key
      */
     public boolean addRelationalDataRow(String inData, String sDelimiter) {
-        debugMessage("============ =========== ============");
-        debugMessage("addRelationalDataRow(): inData=" + inData + " stringDelimiter=" + sDelimiter);
+        log.log(Level.FINE, "============ =========== ============");
+        log.log(Level.FINE, "addRelationalDataRow(): inData=" + inData + " stringDelimiter=" + sDelimiter);
 
         Object[] newRow = parseStringData(inData, sDelimiter);
-        debugMessage("addRelationalDataRow(): Object[] length of parsed string= " + newRow.length);
+        log.log(Level.FINE, "addRelationalDataRow(): Object[] length of parsed string= " + newRow.length);
 
         Object[] passNewData = new Object[newRow.length];
 
@@ -47,20 +47,20 @@ public class LocalRelationalData {
             }
 
             // add graph data to graph data Array
-            passNewData[0] = (String)newRow[0];
-            passNewData[1] = (String)newRow[1];
-            passNewData[2] = (Double)newRow[2];
+            passNewData[0] = newRow[0];
+            passNewData[1] = newRow[1];
+            passNewData[2] = newRow[2];
             aDataStore.add(passNewData);
             return true;
         }
         return false;
     }
 
-    private int findIndexOfMatch(Object[] fnd) {
+    private int findIndexOfMatch(Object[] fnd, boolean bShowGraphAsSeries) {
         int indx = -1;
         Object[] ob = aDataStore.toArray();
         for (indx = 0; indx < aDataStore.size(); indx++) {
-            if (mfg.isShowGraphAsSeries()) {
+            if (bShowGraphAsSeries) {
                 if (((Object[])ob[indx])[0].equals(fnd[1]) && ((Object[])ob[indx])[1].equals(fnd[0]) &&
                     ((Object[])ob[indx])[2].equals(fnd[2])) {
                     // found match
@@ -77,25 +77,25 @@ public class LocalRelationalData {
         return indx;
     }
 
-    protected void debugMessage(String dm) {
-        mfg.debugMessage(dm);
+    private void log(String msg) {
+        log.log(Level.FINE, msg);
     }
 
     /**
      * String getPrimaryKey searches and retrieves the primary key of a row
      * based on its object signature
      */
-    public String getPrimaryKey(String dataRow, String sDelimiter) {
+    public String getPrimaryKey(String dataRow, String sDelimiter, boolean bShowGraphAsSeries) {
         String primaryKey = "";
         Object[] searchRow = this.parseStringData(dataRow, sDelimiter);
         // find the index in the data store that points to the data match
-        int indx = findIndexOfMatch(searchRow);
-        debugMessage("getPrimaryKey(): " + dataRow + ", returns indx=" + indx);
+        int indx = findIndexOfMatch(searchRow, bShowGraphAsSeries);
+        log.log(Level.FINE, "getPrimaryKey(): " + dataRow + ", returns indx=" + indx);
         if (indx >= 0 && indx < aPrimKeys.size()) {
             primaryKey = (String)aPrimKeys.get(indx);
-            debugMessage("getPrimaryKey(): " + primaryKey);
+            log.log(Level.FINE, "getPrimaryKey(): " + primaryKey);
         } else {
-            debugMessage("getPrimaryKey() - no Value found for search string");
+            log.log(Level.FINE, "getPrimaryKey() - no Value found for search string");
         }
         return primaryKey;
     }
@@ -112,22 +112,22 @@ public class LocalRelationalData {
      * @param inData a delimited string containing the column name , the row name and the new value
      * @return true of false
      */
-    public boolean ModifyData(String inData, String sDelimiter) {
+    public boolean ModifyData(String inData, String sDelimiter, boolean bShowGraphAsSeries) {
         boolean ret = true;
         Object[] dataRow = this.parseStringData(inData, sDelimiter);
-        int indx = findIndexOfMatch(dataRow);
-        debugMessage("ModifyData(): " + dataRow + ", found indx=" + indx);
+        int indx = findIndexOfMatch(dataRow, bShowGraphAsSeries);
+        log.log(Level.FINE, "ModifyData(): " + dataRow + ", found indx=" + indx);
         if (indx >= 0) {
             try {
                 Object[] newData = new Object[3];
-                newData[0] = (String)dataRow[0];
-                newData[1] = (String)dataRow[1];
+                newData[0] = dataRow[0];
+                newData[1] = dataRow[1];
                 // add the new value, replacing the old
                 newData[2] = new Double((String)dataRow[3]);
                 aDataStore.set(indx, newData);
                 ret = true;
             } catch (NumberFormatException nfe) {
-                debugMessage("ModifyData(): new value is not a valid number format");
+                log.log(Level.FINE, "ModifyData(): new value is not a valid number format");
                 ret = false;
             }
         } else {
@@ -140,7 +140,7 @@ public class LocalRelationalData {
     /**
      * Object[] parseStringData (String psd, String SDelimiter) creates an array of
      * objects from a string. For the Forms Graph this string has three tokens delimited
-     * by teh string passed as second argument. The string format is <column><delimiter><row><delimiter><value>.
+     * by the string passed as second argument. The string format is <column><delimiter><row><delimiter><value>.
      * For example: "USA,AVGSAL,1345"
      */
     protected Object[] parseStringData(String psd, String sDelimiter) {
@@ -157,7 +157,7 @@ public class LocalRelationalData {
         // use in a master/detail relationship or row searches, This forth value
         // can be null
 
-        debugMessage("parseStringData() received " + tokenLength + " tokens");
+        log.log(Level.FINE, "parseStringData() received " + tokenLength + " tokens");
 
         try {
 
@@ -168,7 +168,7 @@ public class LocalRelationalData {
       * However I am not rude and instead ignore values after the third position
       * rather than raising an exception
       */
-            debugMessage("parseStringData(): try block entered");
+            log.log(Level.FINE, "parseStringData(): try block entered");
 
             if (tokenLength > 2) {
                 rowData = new Object[tokenLength];
@@ -181,24 +181,24 @@ public class LocalRelationalData {
                     switch (i) {
                     case 0:
                     case 1:
-                        rowData[i] = ((String)tokens.nextElement());
-                        debugMessage(" parseStringData(): Token" + i + " has a value of " + (String)rowData[i]);
+                        rowData[i] = tokens.nextElement();
+                        log.log(Level.FINE, " parseStringData(): Token" + i + " has a value of " + (String)rowData[i]);
                         break;
                     case 2:
                         rowData[i] = new Double((String)tokens.nextElement());
-                        debugMessage(" parseStringData(): Token" + i + " has a value of " + (Double)rowData[i]);
+                        log.log(Level.FINE, " parseStringData(): Token" + i + " has a value of " + (Double)rowData[i]);
                         break;
                         // case 4 is used e.g. with addRelationalDataRow and modifyRelationalRow
                     case 3:
-                        rowData[i] = (String)tokens.nextElement();
-                        debugMessage(" parseStringData(): Token" + i + " has a value of " + (String)rowData[i]);
+                        rowData[i] = tokens.nextElement();
+                        log.log(Level.FINE, " parseStringData(): Token" + i + " has a value of " + (String)rowData[i]);
                         break;
                     default: // ignore
                     }
                 }
                 return rowData;
             } else {
-                debugMessage(" parseStringData(): Wrong number of tokens in line: " + psd);
+                log.log(Level.FINE, " parseStringData(): Wrong number of tokens in line: " + psd);
             }
         }
 
@@ -206,23 +206,23 @@ public class LocalRelationalData {
      * react. In addition send message to the debug console if debug is enabled
     */
         catch (NumberFormatException nfc) {
-            debugMessage("parseStringData(): Exception in parseStringData method: Value passed is not a valid number");
+            log.log(Level.FINE, "parseStringData(): Exception in parseStringData method: Value passed is not a valid number");
         }
 
         catch (Exception ex) {
-            debugMessage("parseStringData(): unhandled exception " + ex.getMessage());
+            log.log(Level.FINE, "parseStringData(): unhandled exception " + ex.getMessage());
         }
-        debugMessage("parseStringData(): return empty array of Objects.");
+        log.log(Level.FINE, "parseStringData(): return empty array of Objects.");
         return new Object[0];
     }
 
     /**
      * Remove Data
      */
-    public boolean RemoveData(String remData, String sDelimiter) {
+    public boolean RemoveData(String remData, String sDelimiter, boolean bShowGraphAsSeries) {
         boolean ret = true;
         Object[] dataRow = this.parseStringData(remData, sDelimiter);
-        int indx = this.findIndexOfMatch(dataRow);
+        int indx = this.findIndexOfMatch(dataRow, bShowGraphAsSeries);
         // if matching row is found then remove it from data store array
         if (indx >= 0) {
             aDataStore.remove(indx);

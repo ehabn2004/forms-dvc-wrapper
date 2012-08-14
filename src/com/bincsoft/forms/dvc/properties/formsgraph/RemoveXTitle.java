@@ -1,16 +1,13 @@
 package com.bincsoft.forms.dvc.properties.formsgraph;
 
-import com.bincsoft.forms.dvc.FormsGraph;
+import com.bincsoft.forms.BincsoftBean;
 
-
-public class RemoveXTitle implements IFormsGraphProperty {
-    public RemoveXTitle() {
-        super();
-    }
-
-    public boolean handleProperty(String sParams, FormsGraph graph) {
+public class RemoveXTitle extends FormsGraphPropertyHandler {
+    @Override
+    public boolean handleProperty(String sParams, BincsoftBean bean) {
+        super.handleProperty(sParams, bean);
         graph.getGraph().getO1Title().setVisible(false);
-        graph.debugMessage("HIDE_X_TITLE: set visible to false");
+        log("HIDE_X_TITLE: set visible to false");
         return true;
     }
 }

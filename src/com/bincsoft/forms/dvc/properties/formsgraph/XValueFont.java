@@ -1,28 +1,22 @@
 package com.bincsoft.forms.dvc.properties.formsgraph;
 
 
+import com.bincsoft.forms.BincsoftBean;
 import com.bincsoft.forms.dvc.DvcHelper;
-import com.bincsoft.forms.dvc.FormsGraph;
+import com.bincsoft.forms.dvc.GraphText;
 
-import java.awt.Font;
-
-public class XValueFont implements IFormsGraphProperty {
-    public XValueFont() {
-        super();
-    }
-
-    public boolean handleProperty(String sParams, FormsGraph graph) {
-        if (!sParams.equals("")) {
-            graph.debugMessage("SET_X_VALUE_FONT: " + sParams);
+public class XValueFont extends FormsGraphPropertyHandler {
+    @Override
+    public boolean handleProperty(String sParams, BincsoftBean bean) {
+        if (super.handleProperty(sParams, bean)) {
+            log("SET_X_VALUE_FONT: " + sParams);
             sParams = "blabla" + graph.getDelimiter() + sParams;
-            Object[] mo = DvcHelper.getTitleFromString(sParams, graph.getDelimiter());
-            if (mo.length > 1) {
-                graph.debugMessage("SET_X_VALUE_FONT Font: " + ((Font)mo[1]).getFontName());
-                graph.debugMessage("SET_X_VALUE_FONT Font Style: " + ((Font)mo[1]).getStyle());
-                graph.getGraph().getO1TickLabel().setFont((Font)mo[1]);
-            }
+            GraphText graphText = DvcHelper.getTitleFromString(sParams, graph.getDelimiter());
+            log("SET_X_VALUE_FONT Font: " + graphText.getFont().getFontName());
+            log("SET_X_VALUE_FONT Font Style: " + graphText.getFont().getStyle());
+            graph.getGraph().getO1TickLabel().setFont(graphText.getFont());
         } else {
-            graph.debugMessage("SET_X_VALUE_FONT: No attributes passed");
+            log("SET_X_VALUE_FONT: No attributes passed");
         }
         return true;
     }

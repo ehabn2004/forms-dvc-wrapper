@@ -12,7 +12,7 @@ import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class DvcHelper {
+public class DvcHelper {    
     public static String convertStreamToString(InputStream is) {
         BufferedReader reader = new BufferedReader(new InputStreamReader(is));
         StringBuilder sb = new StringBuilder();
@@ -55,42 +55,40 @@ public class DvcHelper {
      * public Object[] getTitleFromString(String in) takes a delimited string
      * and creates a title string, a Font value and a Color value of it. The
      * delimiter used is the defined delimiter stored in sDelimiter, or ',' as
-     * the default. The String syntax is '<Title>,<color>,<[b][i]>,<size>,<Font
-     * Name>' Values can be omitted from right to left, e.g
-     * '<Title>,<color>,<[b][i]>,<size>' or '<Title>,<color>,<[b][i]>'
-     *
+     * the default. The String syntax is {@code '<Title>,<color>,<[b][i]>,<size>,<Font
+     * Name>'} Values can be omitted from right to left, e.g
+     * {@code '<Title>,<color>,<[b][i]>,<size>' or '<Title>,<color>,<[b][i]>'}
      */
-    public static Object[] getTitleFromString(String in, String sDelimiter) {
-        Object[] fontProperties = new Object[4];
+    public static GraphText getTitleFromString(String in, String sDelimiter) {
         Color fontCol = Color.black;
         String title = "";
-        String fontName = "Arial";
-        int size = 11;
-        int style = 0;
+        String fontName = "Times New Roman";
+        int size = 12;
+        int style = Font.PLAIN;
 
         // remove empty tokens in beginning and end
         in = handleTokenNullvaluesInStartAndEnd(in, sDelimiter);
 
         StringTokenizer tokens = new StringTokenizer(in, sDelimiter);
         int tokenCount = tokens.countTokens();
-        debugMessage("getTitleFromString() received " + tokenCount + " tokens");
+        log(Level.FINE, ("getTitleFromString() received " + tokenCount + " tokens"));
         for (int i = 0; i < tokenCount; i++) {
             switch (i) {
                 // Title string
             case 0:
                 title = (String)tokens.nextElement();
-                debugMessage("getFontFromString(): Title text =" + title);
+                log(Level.FINE, ("getFontFromString(): Title text =" + title));
                 break;
                 // Font color
             case 1:
                 fontCol = ColorCodeRegistry.getColorCode((String)tokens.nextElement());
                 fontCol = (fontCol != null ? fontCol : Color.black);
-                debugMessage("getFontFromString(): Color =" + fontCol.toString());
+                log(Level.FINE, ("getFontFromString(): Color =" + fontCol.toString()));
                 break;
                 // Style
             case 2:
                 String s = (String)tokens.nextElement();
-                debugMessage("getFontFromString(): Style =" + s);
+                log(Level.FINE, ("getFontFromString(): Style =" + s));
                 if ((s.indexOf("n")) >= 0) {
                     style = Font.PLAIN;
                 }
@@ -105,28 +103,41 @@ public class DvcHelper {
                 // size
             case 3:
                 try {
-                    size = (new Double((String)tokens.nextElement())).intValue();
-                    debugMessage("getFontFromString(): Font size =" + size);
+                    size = getFormsFontSizeInPoints((String)tokens.nextElement());
+                    log(Level.FINE, ("getFontFromString(): Font size =" + size));
                 } catch (NumberFormatException nfe) {
-                    debugMessage("getTitleFromString(): " + size +
-                                 " is an unknow font size and cannot be casted to Integer");
+                    log(Level.FINE, ("getTitleFromString(): " + size +
+                                 " is an unknown font size and cannot be casted to Integer"));
                 }
                 break;
                 // color
             case 4:
                 fontName = (String)tokens.nextElement();
-                debugMessage("getFontFromString(): Font name =" + fontName);
+                log(Level.FINE, ("getFontFromString(): Font name =" + fontName));
                 break;
             default: // ignore
             }
         }
-        fontProperties[0] = title;
-        fontProperties[1] = new Font(fontName, style, size);
-        fontProperties[2] = fontCol;
-        return fontProperties;
+        return new GraphText(title, new Font(fontName, style, size), fontCol);
     }
     
-    private static void debugMessage(String s) {
-        Logger.getLogger(DvcHelper.class.getName()).log(Level.INFO, s);
+    public static int getFormsFontSizeInPoints(String sizeAsString) throws NumberFormatException {
+        return (int) (Integer.parseInt(sizeAsString) * 1.33d); // Recalculate whatever format Forms uses to pt
+    }
+    
+    public Object[] getParamsFromString(String sIn, String sDelimiter) {
+        // remove empty tokens in beginning and end
+        sIn = handleTokenNullvaluesInStartAndEnd(sIn, sDelimiter);
+        StringTokenizer tokens = new StringTokenizer(sIn, sDelimiter);
+        log(Level.FINE, ("getParamsFromString() received " + tokens.countTokens() + " tokens"));
+        Object[] tokensArray = new Object[tokens.countTokens()];
+        for (int i = 0; i < tokens.countTokens(); i++) {
+            tokensArray[i] = tokens.nextElement();
+        }
+        return tokensArray;
+    }
+    
+    private static void log(Level lvl, String s) {
+        Logger.getLogger(DvcHelper.class.getName()).log(lvl, s);
     }
 }

@@ -1,18 +1,16 @@
 package com.bincsoft.forms.dvc.properties.formsgraph;
 
 
-import com.bincsoft.forms.dvc.FormsGraph;
+import com.bincsoft.forms.BincsoftBean;
 
 import oracle.dss.util.EdgeOutOfRangeException;
 
-public class SeriesCount implements IFormsGraphProperty {
-    public SeriesCount() {
-        super();
-    }
-
-    public boolean handleProperty(String sParams, FormsGraph graph) {
+public class SeriesCount extends FormsGraphPropertyHandler {
+    @Override
+    public boolean handleProperty(String sParams, BincsoftBean bean) {
+        super.handleProperty(sParams, bean);
         // retrieve graph column count for further usage
-        graph.debugMessage("SERIES COUNT requested");
+        log("SERIES COUNT requested");
         // if rows shown as series then row number = column number
         try {
             if (graph.isShowGraphAsSeries()) {
@@ -21,7 +19,7 @@ public class SeriesCount implements IFormsGraphProperty {
                 graph.returnSeriesCount(graph.getGraph().getColumnCount());
             }
         } catch (EdgeOutOfRangeException ex) {
-            graph.debugMessage("SERIES_COUNT: " + ex);
+            log("SERIES_COUNT: " + ex);
         }
         return true;
     }

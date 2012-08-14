@@ -1,20 +1,18 @@
 package com.bincsoft.forms.dvc.properties.formsgraph;
 
 
+import com.bincsoft.forms.BincsoftBean;
 import com.bincsoft.forms.dvc.DvcHelper;
-import com.bincsoft.forms.dvc.FormsGraph;
 
 import java.util.StringTokenizer;
 
 import oracle.dss.graph.Graph;
 
-public class Depth implements IFormsGraphProperty {
-    public Depth() {
-        super();
-    }
 
-    public boolean handleProperty(String sParams, FormsGraph graph) {
-        if (!sParams.equals("")) {
+public class Depth extends FormsGraphPropertyHandler {
+    @Override
+    public boolean handleProperty(String sParams, BincsoftBean bean) {
+        if (super.handleProperty(sParams, bean)) {
             String _sObject = sParams;
             _sObject = DvcHelper.handleTokenNullvaluesInStartAndEnd(_sObject, graph.getDelimiter());
             StringTokenizer st = new StringTokenizer(_sObject, graph.getDelimiter());
@@ -28,7 +26,7 @@ public class Depth implements IFormsGraphProperty {
                 secondToken = (String)st.nextElement();
             }
 
-            graph.debugMessage("SET_DEPTH: tokens = " + firstToken + " , " + secondToken);
+            log("SET_DEPTH: tokens = " + firstToken + " , " + secondToken);
 
             try {
                 // set first token as depth value and second token as radius
@@ -43,12 +41,12 @@ public class Depth implements IFormsGraphProperty {
                 }
 
             } catch (NumberFormatException nfe) {
-                graph.debugMessage("SET_DEPTH: Could not turn String value into integer - " + firstToken + " , " +
+                log("SET_DEPTH: Could not turn String value into integer - " + firstToken + " , " +
                              secondToken);
             }
 
         } else {
-            graph.debugMessage("SET_DEPTH: No values passed");
+            log("SET_DEPTH: No values passed");
         }
         return true;
     }

@@ -1,8 +1,8 @@
 package com.bincsoft.forms.dvc.properties.formsgraph;
 
 
+import com.bincsoft.forms.BincsoftBean;
 import com.bincsoft.forms.dvc.ColorCodeRegistry;
-import com.bincsoft.forms.dvc.FormsGraph;
 
 import java.awt.Color;
 
@@ -12,12 +12,11 @@ import oracle.dss.graph.BaseGraphComponent;
 import oracle.dss.graph.GraphConstants;
 import oracle.dss.graph.ReferenceObject;
 
-public class AddIndexLine implements IFormsGraphProperty {
-    public AddIndexLine() {
-        super();
-    }
 
-    public boolean handleProperty(String sParams, FormsGraph graph) {
+public class AddIndexLine extends FormsGraphPropertyHandler {
+    @Override
+    public boolean handleProperty(String sParams, BincsoftBean bean) {
+        super.handleProperty(sParams, bean);
         String theIndexText = "";
         String theAxis = "";
         int theIndexNumber = -1;
@@ -31,10 +30,6 @@ public class AddIndexLine implements IFormsGraphProperty {
                 new StringTokenizer(sParams, graph.getDelimiter());
             int tokenLength = stok.countTokens();
 
-            graph.debugMessage("ADD_INDEX_LINE - Arguments received: " +
-                               sParams);
-            graph.debugMessage("ADD_INDEX_LINE - Tokens: " + tokenLength);
-
             if (tokenLength > 0) {
                 // set Text
                 theIndexText = (String)stok.nextElement();
@@ -44,10 +39,10 @@ public class AddIndexLine implements IFormsGraphProperty {
                 // set visibility
                 if ("true".equalsIgnoreCase(((String)stok.nextElement()).trim())) {
                     showIndexInLegend = true;
-                    graph.debugMessage("ADD_INDEX_LINE: Show index line");
+                    log("ADD_INDEX_LINE: Show index line");
                 } else {
                     showIndexInLegend = false;
-                    graph.debugMessage("ADD_INDEX_LINE: Don't show index line");
+                    log("ADD_INDEX_LINE: Don't show index line");
                 }
             }
 
@@ -62,7 +57,7 @@ public class AddIndexLine implements IFormsGraphProperty {
                     theIndexNumber =
                             new Double((String)stok.nextElement()).intValue();
                 } catch (Exception e) {
-                    graph.debugMessage("ADD_INDEX_LINE: Not a valid index line number. Should be 0 .. 2");
+                    log("ADD_INDEX_LINE: Not a valid index line number. Should be 0 .. 2");
                     return true;
                 }
             }
@@ -73,7 +68,7 @@ public class AddIndexLine implements IFormsGraphProperty {
                     theValue =
                             new Double((String)stok.nextElement()).doubleValue();
                 } catch (Exception e) {
-                    graph.debugMessage("ADD_INDEX_LINE: Not a valid index line value. Should be like 1000.00");
+                    log("ADD_INDEX_LINE: Not a valid index line value. Should be like 1000.00");
                     return true;
                 }
 
@@ -91,7 +86,7 @@ public class AddIndexLine implements IFormsGraphProperty {
                     theLineWidth =
                             new Double((String)stok.nextElement()).intValue();
                 } catch (Exception e) {
-                    graph.debugMessage("ADD_INDEX_LINE: Not a valid value for the index line width");
+                    log("ADD_INDEX_LINE: Not a valid value for the index line width");
                 }
             }
 
@@ -118,7 +113,7 @@ public class AddIndexLine implements IFormsGraphProperty {
 
 
         } else {
-            graph.debugMessage("ADD_INDEX_LINE: No valid arguments passed with request");
+            log("ADD_INDEX_LINE: No valid arguments passed with request");
         }
         return true;
     }

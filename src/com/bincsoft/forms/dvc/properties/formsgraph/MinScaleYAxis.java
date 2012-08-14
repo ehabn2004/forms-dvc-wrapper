@@ -1,17 +1,13 @@
 package com.bincsoft.forms.dvc.properties.formsgraph;
 
-import com.bincsoft.forms.dvc.FormsGraph;
+import com.bincsoft.forms.BincsoftBean;
 
-
-public class MinScaleYAxis implements IFormsGraphProperty {
-    public MinScaleYAxis() {
-        super();
-    }
-
-    public boolean handleProperty(String sParams, FormsGraph graph) {
+public class MinScaleYAxis extends FormsGraphPropertyHandler {
+    @Override
+    public boolean handleProperty(String sParams, BincsoftBean bean) {
+        super.handleProperty(sParams, bean);
         if (sParams.length() == 0) {
-            // go read the manual !
-            graph.debugMessage("MIN_SCALE_Y_AXIS, scaling needs a minimum value to be provided. Please refer to the" +
+            log("MIN_SCALE_Y_AXIS, scaling needs a minimum value to be provided. Please refer to the" +
                                " documentation on how to use this property.");
         } else {
             // exceptions may be raised on the way, so we prep for it
@@ -28,8 +24,8 @@ public class MinScaleYAxis implements IFormsGraphProperty {
                     graph.getGraph().getY1Axis().setAxisMinValue(minValue);
                 }
             } catch (NumberFormatException nfe) {
-                graph.debugMessage("MIN_SCALE_Y_AXIS: Not a valid integer format passed");
-                graph.debugMessage(nfe.getMessage());
+                log("MIN_SCALE_Y_AXIS: Not a valid integer format passed");
+                log(nfe.getMessage());
             }
         }
         return true;

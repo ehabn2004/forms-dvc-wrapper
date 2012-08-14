@@ -1,15 +1,11 @@
 package com.bincsoft.forms.dvc.properties.formsgraph;
 
-import com.bincsoft.forms.dvc.FormsGraph;
+import com.bincsoft.forms.BincsoftBean;
 
-
-public class HideGraph implements IFormsGraphProperty {
-    public HideGraph() {
-        super();
-    }
-
-    public boolean handleProperty(String sParams, FormsGraph graph) {
-        graph.debugMessage("HIDE_GRAPH");
+public class HideGraph extends FormsGraphPropertyHandler {
+    @Override
+    public boolean handleProperty(String sParams, BincsoftBean bean) {
+        super.handleProperty(sParams, bean);
         graph.getGraph().setVisible(false);
         // in case that the graph was replaced by the No data found panel, indicating that no data was provided for the graph
         graph.getNoDataFoundPanel().setVisible(false);

@@ -1,15 +1,12 @@
 package com.bincsoft.forms.dvc.properties.formsgraph;
 
-import com.bincsoft.forms.dvc.FormsGraph;
+import com.bincsoft.forms.BincsoftBean;
 
-
-public class RemoveSubTitle implements IFormsGraphProperty {
-    public RemoveSubTitle() {
-        super();
-    }
-
-    public boolean handleProperty(String sParams, FormsGraph graph) {
-        graph.debugMessage("HIDE_SUBTITLE: hiding");
+public class RemoveSubTitle extends FormsGraphPropertyHandler {
+    @Override
+    public boolean handleProperty(String sParams, BincsoftBean bean) {
+        super.handleProperty(sParams, bean);
+        log("HIDE_SUBTITLE: hiding");
         graph.getGraph().getDataviewSubtitle().setVisible(false);
         return true;
     }

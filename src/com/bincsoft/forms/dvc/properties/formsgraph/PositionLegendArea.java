@@ -1,19 +1,16 @@
 package com.bincsoft.forms.dvc.properties.formsgraph;
 
 
-import com.bincsoft.forms.dvc.FormsGraph;
+import com.bincsoft.forms.BincsoftBean;
 
 import oracle.dss.graph.BaseGraphComponent;
 import oracle.dss.graph.LegendArea;
 
-public class PositionLegendArea implements IFormsGraphProperty {
-    public PositionLegendArea() {
-        super();
-    }
-
-    public boolean handleProperty(String sParams, FormsGraph graph) {
-        if (!sParams.equals("")) {
-            graph.debugMessage("POSITION_LEGEND: position legend to " +
+public class PositionLegendArea extends FormsGraphPropertyHandler {
+   @Override
+    public boolean handleProperty(String sParams, BincsoftBean bean) {
+        if (super.handleProperty(sParams, bean)) {
+            log("POSITION_LEGEND: position legend to " +
                                sParams);
             if ("AUTO".equalsIgnoreCase(sParams)) {
                 LegendArea legend = graph.getGraph().getLegendArea();
@@ -45,12 +42,12 @@ public class PositionLegendArea implements IFormsGraphProperty {
                     legend.setPosition(BaseGraphComponent.LAP_BOTTOM);
 
                 } else {
-                    graph.debugMessage("POSITION_LEGEND: value " + sParams +
+                    log("POSITION_LEGEND: value " + sParams +
                                        " passed does not represent a valid argument");
                 }
             }
         } else {
-            graph.debugMessage("POSITION_LEGEND: No value passed. Pass LEFT,TOP,BOTTOM,RIGHT,AUTO as an argument when calling set_custom_property()");
+            log("POSITION_LEGEND: No value passed. Pass LEFT,TOP,BOTTOM,RIGHT,AUTO as an argument when calling set_custom_property()");
         }
         return true;
     }

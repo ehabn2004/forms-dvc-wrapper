@@ -4,80 +4,80 @@
     <SFX fillType="FT_COLOR"/>
   </Background>
   <DataMarker markerSize="30"/>
-  <DataviewFootnote fontfontSize="12" fontBold="true" fontItalic="false" horzAlign="CENTER" foreground="#0" background="#ffffff" underline="false"/>
-  <DataviewSubtitle fontfontSize="14" fontBold="true" fontItalic="false" horzAlign="CENTER" foreground="#0" background="#ffffff" underline="false"/>
-  <DataviewTitle fontfontSize="16" fontBold="true" fontItalic="false" horzAlign="CENTER" foreground="#0" background="#ffffff" underline="false"/>
+  <DataviewFootnote fontfontSize="13" fontBold="true" fontItalic="false" horzAlign="CENTER" foreground="#0" background="#ffffff" underline="false"/>
+  <DataviewSubtitle fontfontSize="13" fontBold="true" fontItalic="false" horzAlign="CENTER" foreground="#0" background="#ffffff" underline="false"/>
+  <DataviewTitle fontfontSize="13" fontBold="true" fontItalic="false" horzAlign="CENTER" foreground="#0" background="#ffffff" underline="false"/>
   <Footnote horizontalAlignment="LEADING">
-    <GraphFont size="11" fontColor="#0" bold="false" italic="false" underline="false"/>
+    <GraphFont size="13" fontColor="#0" bold="false" italic="false" underline="false"/>
   </Footnote>
   <LegendArea borderTransparent="true"/>
   <LegendText>
-    <GraphFont size="11" fontColor="#0" bold="false" italic="false" underline="false"/>
+    <GraphFont size="13" fontColor="#0" bold="false" italic="false" underline="false"/>
   </LegendText>
   <LegendTitle>
-    <GraphFont size="11" fontColor="#0" bold="false" italic="false" underline="false"/>
+    <GraphFont size="13" fontColor="#0" bold="false" italic="false" underline="false"/>
   </LegendTitle>
   <O1Axis lineColor="#0"/>
   <O1MajorTick lineWidth="1" lineColor="#CCCCCC"/>
   <O1TickLabel>
-    <GraphFont size="11" fontColor="#0" bold="false" italic="false" underline="false"/>
+    <GraphFont size="13" fontColor="#0" bold="false" italic="false" underline="false"/>
   </O1TickLabel>
   <O1Title>
-    <GraphFont size="11" fontColor="#0" bold="false" italic="false" underline="false"/>
+    <GraphFont size="13" fontColor="#0" bold="false" italic="false" underline="false"/>
   </O1Title>
   <ParetoLine color="#4a9cd9"/>
   <PieFrame borderColor="#0" borderTransparent="true" fillColor="#ffffff" fillTransparent="false"/>
   <PieLabel>
-    <GraphFont size="11" fontColor="#0" bold="false" italic="false" underline="false"/>
+    <GraphFont size="13" fontColor="#0" bold="false" italic="false" underline="false"/>
   </PieLabel>
   <PlotArea borderColor="#CCCCCC" borderTransparent="false" fillColor="#ffffff" fillTransparent="false"/>
   <RingTotalLabel>
-    <GraphFont size="11" fontColor="#0" bold="false" italic="false" underline="false"/>
+    <GraphFont size="13" fontColor="#0" bold="false" italic="false" underline="false"/>
   </RingTotalLabel>
   <QuadrantLine lineColor="#A4CBEB" lineWidth="2"/>
   <SeriesItems defaultBorderColor="#0" defaultBorderTransparent="false" borderUsingDefaults="true">
     <Series/>
   </SeriesItems>
   <SliceLabel>
-    <GraphFont size="11" fontColor="#0" bold="false" italic="false" underline="false"/>
+    <GraphFont size="13" fontColor="#0" bold="false" italic="false" underline="false"/>
   </SliceLabel>
   <Subtitle>
-    <GraphFont size="14" fontColor="#0" bold="true" italic="false" underline="false"/>
+    <GraphFont size="13" fontColor="#0" bold="true" italic="false" underline="false"/>
   </Subtitle>
   <ThreeDFloor borderColor="#0" borderTransparent="false" fillColor="#ffffff" fillTransparent="false" sharePanelProperties="true"/>
   <Title>
-    <GraphFont size="14" fontColor="#0" bold="true" italic="false" underline="false"/>
+    <GraphFont size="13" fontColor="#0" bold="true" italic="false" underline="false"/>
   </Title>
   <X1Axis lineColor="#0" majorTickStepAutomatic="true"/>
   <X1MajorTick lineWidth="1" lineColor="#CCCCCC"/>
   <X1TickLabel>
-    <GraphFont size="11" fontColor="#0" bold="false" italic="false" underline="false"/>
+    <GraphFont size="13" fontColor="#0" bold="false" italic="false" underline="false"/>
   </X1TickLabel>
   <X1Title>
-    <GraphFont size="11" fontColor="#0" bold="false" italic="false" underline="false"/>
+    <GraphFont size="13" fontColor="#0" bold="false" italic="false" underline="false"/>
   </X1Title>
   <Y1Axis lineColor="#0" majorTickStepAutomatic="true"/>
   <Y1MajorTick lineWidth="1" lineColor="#CCCCCC"/>
   <Y1TickLabel>
-    <GraphFont size="11" fontColor="#0" bold="false" italic="false" underline="false"/>
+    <GraphFont size="13" fontColor="#0" bold="false" italic="false" underline="false"/>
   </Y1TickLabel>
   <Y1Title>
-    <GraphFont size="11" fontColor="#0" bold="false" italic="false" underline="false"/>
+    <GraphFont size="13" fontColor="#0" bold="false" italic="false" underline="false"/>
   </Y1Title>
   <Y1ZeroLine lineColor="#0"/>
   <Y2Axis lineColor="#0" majorTickStepAutomatic="true"/>
   <Y2MajorTick lineWidth="1" lineColor="#CCCCCC"/>
   <Y2TickLabel>
-    <GraphFont size="11" fontColor="#0" bold="false" italic="false" underline="false"/>
+    <GraphFont size="13" fontColor="#0" bold="false" italic="false" underline="false"/>
   </Y2TickLabel>
   <Y2Title>
-    <GraphFont size="11" fontColor="#0" bold="false" italic="false" underline="false"/>
+    <GraphFont size="13" fontColor="#0" bold="false" italic="false" underline="false"/>
   </Y2Title>
   <Y2ZeroLine lineColor="#0"/>
   <ZTickLabel>
-    <GraphFont size="11" fontColor="#0" bold="false" italic="false" underline="false"/>
+    <GraphFont size="13" fontColor="#0" bold="false" italic="false" underline="false"/>
   </ZTickLabel>
   <ZTitle>
-    <GraphFont size="11" fontColor="#0" bold="false" italic="false" underline="false"/>
+    <GraphFont size="13" fontColor="#0" bold="false" italic="false" underline="false"/>
   </ZTitle>
 </GraphStyle>

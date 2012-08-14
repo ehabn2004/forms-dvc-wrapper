@@ -1,17 +1,14 @@
 package com.bincsoft.forms.dvc.properties.formsgraph;
 
 
-import com.bincsoft.forms.dvc.FormsGraph;
+import com.bincsoft.forms.BincsoftBean;
 
 import oracle.dss.graph.BaseGraphComponent;
 
-public class ShowGrid implements IFormsGraphProperty {
-    public ShowGrid() {
-        super();
-    }
-
-    public boolean handleProperty(String sParams, FormsGraph graph) {
-        if (!sParams.equals("")) {
+public class ShowGrid extends FormsGraphPropertyHandler {
+    @Override
+    public boolean handleProperty(String sParams, BincsoftBean bean) {
+        if (super.handleProperty(sParams, bean)) {
             if (sParams.equalsIgnoreCase("TRUE")) {
                 graph.getGraph().getY1MajorTick().setTickStyle(BaseGraphComponent.GS_AUTOMATIC);
                 graph.getGraph().getO1MajorTick().setTickStyle(BaseGraphComponent.GS_AUTOMATIC);
@@ -24,7 +21,7 @@ public class ShowGrid implements IFormsGraphProperty {
                 //m_graph.getO1MajorTick().setVisible(false); // Deprecated
             } else {
                 // ignore
-                graph.debugMessage("SHOW_GRID attribute is not true nor false: Ignored");
+                log("SHOW_GRID attribute is not true nor false: Ignored");
             }
         }
         return true;

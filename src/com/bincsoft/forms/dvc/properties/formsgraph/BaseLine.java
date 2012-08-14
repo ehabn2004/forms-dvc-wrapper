@@ -1,26 +1,21 @@
 package com.bincsoft.forms.dvc.properties.formsgraph;
 
-import com.bincsoft.forms.dvc.FormsGraph;
+import com.bincsoft.forms.BincsoftBean;
 
-
-public class BaseLine implements IFormsGraphProperty {
-    public BaseLine() {
-        super();
-    }
-
-    public boolean handleProperty(String sParams, FormsGraph graph) {
-        if (!sParams.equals("")) {
+public class BaseLine extends FormsGraphPropertyHandler {
+    @Override
+    public boolean handleProperty(String sParams, BincsoftBean bean) {
+        if (super.handleProperty(sParams, bean)) {
             double baseLineVal = 0;
-            graph.debugMessage("SET_GRAPH_BASELINE: Trying to set base line val to " + sParams);
             try {
                 baseLineVal = new Double(sParams).doubleValue();
                 graph.getGraph().getY1BaseLine().setValue(baseLineVal);
-                graph.debugMessage("SET_GRAPH_BASELINE: Baseline set to (double) " + baseLineVal);
+                log("SET_GRAPH_BASELINE: Baseline set to (double) " + baseLineVal);
             } catch (NumberFormatException nfe) {
-                graph.debugMessage("SET_GRAPH_BASELINE: argument passed as a base line value is not a valid number format!");
+                log("SET_GRAPH_BASELINE: argument passed as a base line value is not a valid number format!");
             }
         } else {
-            graph.debugMessage("SET_GRAPH_BASELINE: No base line value passed - statement ignored");
+            log("SET_GRAPH_BASELINE: No base line value passed - statement ignored");
         }
         return true;
     }
