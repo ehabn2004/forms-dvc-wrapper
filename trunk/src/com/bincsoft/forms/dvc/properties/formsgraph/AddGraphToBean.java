@@ -1,14 +1,13 @@
 package com.bincsoft.forms.dvc.properties.formsgraph;
 
-import com.bincsoft.forms.dvc.FormsGraph;
 
-public class AddGraphToBean implements IFormsGraphProperty {
-    public AddGraphToBean() {
-        super();
-    }
+import com.bincsoft.forms.BincsoftBean;
 
-    public boolean handleProperty(String sParams, FormsGraph graph) {
-        graph.debugMessage("GRAPH: adding to container");
+public class AddGraphToBean extends FormsGraphPropertyHandler {
+    @Override
+    public boolean handleProperty(String sParams, BincsoftBean bean) {
+        super.handleProperty(sParams, bean);
+        log("GRAPH: adding to container");
         if (graph.getSeparateFrame() != null) {
             graph.getSeparateFrame().setVisible(false);
             graph.getSeparateFrame().getContentPane().remove(0);

@@ -1,18 +1,18 @@
 package com.bincsoft.forms.dvc.properties.formsgraph;
 
+
+import com.bincsoft.forms.BincsoftBean;
 import com.bincsoft.forms.dvc.DvcHelper;
-import com.bincsoft.forms.dvc.FormsGraph;
 
 import java.util.StringTokenizer;
 
 import javax.swing.SwingConstants;
 
-public class AlignTitleText implements IFormsGraphProperty {
-    public AlignTitleText() {
-        super();
-    }
 
-    public boolean handleProperty(String sParams, FormsGraph graph) {
+public class AlignTitleText extends FormsGraphPropertyHandler {
+    @Override
+    public boolean handleProperty(String sParams, BincsoftBean bean) {
+        super.handleProperty(sParams, bean);
         String _sObject = sParams;
         _sObject = DvcHelper.handleTokenNullvaluesInStartAndEnd(_sObject, graph.getDelimiter());
 
@@ -21,7 +21,7 @@ public class AlignTitleText implements IFormsGraphProperty {
         int tokenLength = st.countTokens();
         String firstToken = "", secondToken = "", thirdToken = "";
 
-        graph.debugMessage("Property ALIGN_TITLE_TEXT has received " +
+        log("Property ALIGN_TITLE_TEXT has received " +
                            tokenLength + " tokens and a value of " + sParams);
 
         if (tokenLength > 0) {
@@ -29,7 +29,7 @@ public class AlignTitleText implements IFormsGraphProperty {
             String tValue =
                 firstToken.substring(firstToken.toLowerCase().indexOf("title=") +
                                      6);
-            graph.debugMessage("ALIGN_TITLE_TEXT: FIRST TOKEN: " + tValue);
+            log("ALIGN_TITLE_TEXT: FIRST TOKEN: " + tValue);
             if ("right".equalsIgnoreCase(tValue)) {
                 graph.getGraph().getDataviewTitle().setHorizontalAlignment(SwingConstants.RIGHT);
             } else if ("left".equalsIgnoreCase(tValue)) {
@@ -45,7 +45,7 @@ public class AlignTitleText implements IFormsGraphProperty {
             String tValue =
                 secondToken.substring(secondToken.toLowerCase().indexOf("subtitle=") +
                                       9);
-            graph.debugMessage("ALIGN_TITLE_TEXT: SECOND TOKEN: " + tValue);
+            log("ALIGN_TITLE_TEXT: SECOND TOKEN: " + tValue);
 
             if ("right".equalsIgnoreCase(tValue)) {
                 graph.getGraph().getDataviewSubtitle().setHorizontalAlignment(SwingConstants.RIGHT);
@@ -62,7 +62,7 @@ public class AlignTitleText implements IFormsGraphProperty {
             String tValue =
                 thirdToken.substring(thirdToken.toLowerCase().indexOf("footnote=") +
                                      9);
-            graph.debugMessage("ALIGN_TITLE_TEXT: THIRD TOKEN: " + tValue);
+            log("ALIGN_TITLE_TEXT: THIRD TOKEN: " + tValue);
 
             if ("right".equalsIgnoreCase(tValue)) {
                 graph.getGraph().getDataviewFootnote().setHorizontalAlignment(SwingConstants.RIGHT);

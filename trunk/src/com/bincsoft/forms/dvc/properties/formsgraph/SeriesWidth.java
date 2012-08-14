@@ -1,7 +1,7 @@
 package com.bincsoft.forms.dvc.properties.formsgraph;
 
 
-import com.bincsoft.forms.dvc.FormsGraph;
+import com.bincsoft.forms.BincsoftBean;
 
 import java.util.StringTokenizer;
 
@@ -11,13 +11,11 @@ import oracle.dss.util.MetadataMap;
 import oracle.dss.util.SeriesOutOfRangeException;
 import oracle.dss.util.SliceOutOfRangeException;
 
-public class SeriesWidth implements IFormsGraphProperty {
-    public SeriesWidth() {
-        super();
-    }
 
-    public boolean handleProperty(String sParams, FormsGraph graph) {
-        if (sParams.length() > 0) {
+public class SeriesWidth extends FormsGraphPropertyHandler {
+    @Override
+    public boolean handleProperty(String sParams, BincsoftBean bean) {
+        if (super.handleProperty(sParams, bean)) {
             // separate series name from string
             StringTokenizer st = new StringTokenizer(sParams, graph.getDelimiter());
             int line_width;
@@ -37,7 +35,7 @@ public class SeriesWidth implements IFormsGraphProperty {
                         line_width = line_width * -1;
                     }
                 } catch (NumberFormatException nfe) {
-                    graph.debugMessage("SET_SERIES_WIDTH: " + sParams + " does not contain a valid line width");
+                    log("SET_SERIES_WIDTH: " + sParams + " does not contain a valid line width");
                     return true;
                 }
 
@@ -45,7 +43,7 @@ public class SeriesWidth implements IFormsGraphProperty {
                 try {
                     series_count = graph.getGraph().getColumnCount();
                 } catch (EdgeOutOfRangeException ex) {
-                    graph.debugMessage("SET_SERIES_WIDTH: " + ex);
+                    log("SET_SERIES_WIDTH: " + ex);
                 }
 
                 for (int i = 0; i < series_count; i++) {
@@ -54,28 +52,28 @@ public class SeriesWidth implements IFormsGraphProperty {
                         shortLabel =
                                 (String)graph.getGraph().getDataAccessSliceLabel(DataDirector.COLUMN_EDGE, i, MetadataMap.METADATA_LONGLABEL);
                     } catch (EdgeOutOfRangeException ex) {
-                        graph.debugMessage("SET_SERIES_WIDTH: " + ex);
+                        log("SET_SERIES_WIDTH: " + ex);
                     } catch (SliceOutOfRangeException ex) {
-                        graph.debugMessage("SET_SERIES_WIDTH: " + ex);
+                        log("SET_SERIES_WIDTH: " + ex);
                     }
 
                     if (seriesName.equalsIgnoreCase(shortLabel.trim())) {
                         try {
                             graph.getGraph().getSeries().setLineWidth(line_width, i);
-                            graph.debugMessage("SET_SERIES_WIDTH: Series '" + seriesName + "' found");
+                            log("SET_SERIES_WIDTH: Series '" + seriesName + "' found");
                             break;
                         } catch (SeriesOutOfRangeException ex) {
-                            graph.debugMessage("SET_SERIES_WIDTH: " + ex);
+                            log("SET_SERIES_WIDTH: " + ex);
                             return true;
                         }
                     }
                 }
             } else {
-                graph.debugMessage("SET_SERIES_WIDTH: not enough arguments specified in " + sParams);
+                log("SET_SERIES_WIDTH: not enough arguments specified in " + sParams);
             }
 
         } else {
-            graph.debugMessage("SET_SERIES_WIDTH: no argument specified");
+            log("SET_SERIES_WIDTH: no argument specified");
         }
         return true;
     }

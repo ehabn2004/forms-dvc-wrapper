@@ -1,11 +1,12 @@
 package com.bincsoft.forms.dvc;
 
-import java.util.ArrayList;
+
 import java.awt.Color;
 
-public class GaugeDataStore {
-    private FormsGauge fg = null;
+import java.util.ArrayList;
 
+
+public class GaugeDataStore {
     private String sLabel = "";
     private double dCurrentValue = 0.00;
     private double dMinValue = 0.00;
@@ -13,9 +14,7 @@ public class GaugeDataStore {
     private ArrayList<Double> alThresholds = new ArrayList<Double>();
     private ArrayList<Color> alThresholdColors = new ArrayList<Color>();
 
-    public GaugeDataStore(FormsGauge pParent) {
-        fg = pParent;
-    }
+    public GaugeDataStore() {}
 
     public void setLabel(String s) {
         sLabel = s;

@@ -1,17 +1,14 @@
 package com.bincsoft.forms.dvc.properties.formsgraph;
 
 
-import com.bincsoft.forms.dvc.FormsGraph;
+import com.bincsoft.forms.BincsoftBean;
 
 import oracle.dss.graph.BaseGraphComponent;
 
-public class ShowPieLabels implements IFormsGraphProperty {
-    public ShowPieLabels() {
-        super();
-    }
-
-    public boolean handleProperty(String sParams, FormsGraph graph) {
-        if (!sParams.equals("")) {
+public class ShowPieLabels extends FormsGraphPropertyHandler {
+    @Override
+    public boolean handleProperty(String sParams, BincsoftBean bean) {
+        if (super.handleProperty(sParams, bean)) {
             if (sParams.equalsIgnoreCase("TEXT")) {
                 graph.getGraph().getSliceLabel().setTextType(BaseGraphComponent.LD_TEXT);
             } else if (sParams.equalsIgnoreCase("TEXT_PERCENT")) {
@@ -21,10 +18,10 @@ public class ShowPieLabels implements IFormsGraphProperty {
             } else if (sParams.equalsIgnoreCase("VALUE")) {
                 graph.getGraph().getSliceLabel().setTextType(BaseGraphComponent.LD_VALUE);
             } else {
-                graph.debugMessage("SHOW_PIE_LABELS: " + sParams + " is not a valid argument");
+                log("SHOW_PIE_LABELS: " + sParams + " is not a valid argument");
             }
         } else {
-            graph.debugMessage("SHOW_PIE_LABELS: Argument must not be null");
+            log("SHOW_PIE_LABELS: Argument must not be null");
         }
         return true;
     }

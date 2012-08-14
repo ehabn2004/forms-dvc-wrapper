@@ -1,38 +1,27 @@
 package com.bincsoft.forms.dvc.properties.formsgraph;
 
 
+import com.bincsoft.forms.BincsoftBean;
 import com.bincsoft.forms.dvc.DvcHelper;
-import com.bincsoft.forms.dvc.FormsGraph;
+import com.bincsoft.forms.dvc.GraphText;
 
-import java.awt.Font;
+public class Y2Label extends FormsGraphPropertyHandler {
+    @Override
+    public boolean handleProperty(String sParams, BincsoftBean bean) {
+        if (super.handleProperty(sParams, bean)) {
+            log("SET_Y2_TITLE retrieved string " + sParams);
+            GraphText graphText = DvcHelper.getTitleFromString(sParams, graph.getDelimiter());
 
-public class Y2Label implements IFormsGraphProperty {
-    public Y2Label() {
-        super();
-    }
+            graph.getGraph().getY2Title().setVisible(true);
+            log("SET_Y2_TITLE Text: " + graphText.getText());
+            graph.getGraph().getY2Title().setText(graphText.getText());
 
-    public boolean handleProperty(String sParams, FormsGraph graph) {
-        if (!sParams.equals("")) {
-            graph.debugMessage("SET_Y2_TITLE retrieved string " + sParams);
-            Object[] mo = DvcHelper.getTitleFromString(sParams, graph.getDelimiter());
-            if (mo.length > 0) {
-                graph.getGraph().getY2Title().setVisible(true);
-                graph.debugMessage("SET_Y2_TITLE Text: " + (String)mo[0]);
-                graph.getGraph().getY2Title().setText((String)mo[0]);
-            }
-            if (mo.length > 1) {
-                graph.debugMessage("SET_Y2_TITLE Font: " + ((Font)mo[1]).getFontName());
-                graph.debugMessage("SET_Y2_TITLE Font Style: " + ((Font)mo[1]).getStyle());
-                graph.getGraph().getY2Title().setFont((Font)mo[1]);
-                graph.getGraph().repaint();
-            }
-            /*
-             * if (mo.length >2){
-             * m_graph.getY1Title().setForeground((Color)mo[2]); }
-             * m_graph.getY1Title().setHorizontalAlignment(AlignCenter);
-             */
+            log("SET_Y2_TITLE Font: " + graphText.getFont().getFontName());
+            log("SET_Y2_TITLE Font Style: " + graphText.getFont().getStyle());
+            graph.getGraph().getY2Title().setFont(graphText.getFont());
+            graph.getGraph().repaint();
         } else {
-            graph.debugMessage("SET_Y2_TITLE: No attributes passed");
+            log("SET_Y2_TITLE: No attributes passed");
         }
         return true;
     }

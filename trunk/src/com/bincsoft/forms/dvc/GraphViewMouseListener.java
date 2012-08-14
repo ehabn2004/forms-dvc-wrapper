@@ -1,11 +1,15 @@
 package com.bincsoft.forms.dvc;
 
+
+import com.bincsoft.forms.dvc.FormsGraph;
 import com.bincsoft.forms.dvc.properties.formsgraph.ReturnValues;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import java.util.Calendar;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.swing.Timer;
 
@@ -29,17 +33,14 @@ import oracle.dss.util.SliceOutOfRangeException;
  * in the BI Graph
  */
 public class GraphViewMouseListener implements ViewMouseListener, ActionListener {
-    Graph m_graph = null;
-    FormsGraph mfg = null;
-    LocalRelationalData mlrd = null;
+    Logger log = Logger.getLogger(getClass().getName());
+    FormsGraph formsGraph = null;
 
     private ViewMouseEvent objEvent = null;
     private Timer objTimer = null;
 
-    public GraphViewMouseListener(Graph g, FormsGraph fg, LocalRelationalData lrd) {
-        m_graph = g;
-        mfg = fg;
-        mlrd = lrd;
+    public GraphViewMouseListener(FormsGraph fg) {
+        formsGraph = fg;
     }
 
     /**
@@ -65,18 +66,18 @@ public class GraphViewMouseListener implements ViewMouseListener, ActionListener
      * </p>
      *
      */
-
+    @Override
     public void actionPerformed(ActionEvent evt) {
         // Handle the click event
         Calendar rightNow = Calendar.getInstance();
-        debugMessage("mouseClicked() - Timer - Timer fired: " + rightNow.getTimeInMillis());
+        log.log(Level.FINE, "mouseClicked() - Timer - Timer fired: " + rightNow.getTimeInMillis());
 
         int iColNum = 0;
         int iRowNum = 0;
 
         try {
-            debugMessage("mouseClicked() - Timer - No. of clicks: " + objEvent.getClickCount());
-            debugMessage("mouseClicked() - Timer - paramString: " + objEvent.paramString());
+            log.log(Level.FINE, "mouseClicked() - Timer - No. of clicks: " + objEvent.getClickCount());
+            log.log(Level.FINE, "mouseClicked() - Timer - paramString: " + objEvent.paramString());
 
             ComponentHandle ch = objEvent.getComponentHandle();
             Object graphData = null;
@@ -88,9 +89,9 @@ public class GraphViewMouseListener implements ViewMouseListener, ActionListener
             // component
 
             if (ch instanceof SeriesComponentHandle) {
-                if ((m_graph.getGraphType() == Graph.PIE_BAR) || (m_graph.getGraphType() == Graph.RING_BAR)) {
-                    debugMessage("mouseClicked() - Timer - detect Mouse Click onto Series component");
-                    m_graph.setPieBarSeries(((SeriesComponentHandle)ch).getSeries());
+                if ((formsGraph.getGraph().getGraphType() == Graph.PIE_BAR) || (formsGraph.getGraph().getGraphType() == Graph.RING_BAR)) {
+                    log.log(Level.FINE, "mouseClicked() - Timer - detect Mouse Click onto Series component");
+                    formsGraph.getGraph().setPieBarSeries(((SeriesComponentHandle)ch).getSeries());
                 }
             }
 
@@ -98,20 +99,20 @@ public class GraphViewMouseListener implements ViewMouseListener, ActionListener
                 iColNum = ((DataComponentHandle)ch).getColumn();
                 iRowNum = ((DataComponentHandle)ch).getRow();
 
-                debugMessage("mouseClicked() - Timer - Number of column in graph: " + (iColNum + 1));
-                debugMessage("mouseClicked() - Timer - Number of row in graph: " + (iRowNum + 1));
+                log.log(Level.FINE, "mouseClicked() - Timer - Number of column in graph: " + (iColNum + 1));
+                log.log(Level.FINE, "mouseClicked() - Timer - Number of row in graph: " + (iRowNum + 1));
 
                 graphData =
-                        m_graph.getGraphModel().getDataAccess().getValue(iRowNum, iColNum, DataMap.DATA_UNFORMATTED);
-                debugMessage("mouseClicked() - Timer - Data value clicked on: " + graphData.toString());
+                        formsGraph.getGraph().getGraphModel().getDataAccess().getValue(iRowNum, iColNum, DataMap.DATA_UNFORMATTED);
+                log.log(Level.FINE, "mouseClicked() - Timer - Data value clicked on: " + graphData.toString());
 
                 columnLabel =
-                        (String)m_graph.getDataAccessSliceLabel(DataDirector.COLUMN_EDGE, iColNum, MetadataMap.METADATA_LONGLABEL);
-                debugMessage("mouseClicked() - Timer - Column Name clicked on: " + columnLabel);
+                        (String)formsGraph.getGraph().getDataAccessSliceLabel(DataDirector.COLUMN_EDGE, iColNum, MetadataMap.METADATA_LONGLABEL);
+                log.log(Level.FINE, "mouseClicked() - Timer - Column Name clicked on: " + columnLabel);
 
                 rowLabel =
-                        (String)m_graph.getDataAccessSliceLabel(DataDirector.ROW_EDGE, iRowNum, MetadataMap.METADATA_LONGLABEL);
-                debugMessage("mouseClicked() - Timer - Row Name clicked on: " + rowLabel);
+                        (String)formsGraph.getGraph().getDataAccessSliceLabel(DataDirector.ROW_EDGE, iRowNum, MetadataMap.METADATA_LONGLABEL);
+                log.log(Level.FINE, "mouseClicked() - Timer - Row Name clicked on: " + rowLabel);
 
                 /*
               * ********************************
@@ -119,23 +120,23 @@ public class GraphViewMouseListener implements ViewMouseListener, ActionListener
               * Forms
               *********************************/
 
-                String sDelimiter = mfg.getDelimiter();
+                String sDelimiter = formsGraph.getDelimiter();
                 String GraphInfo = "";
 
                 /*
                * Determine the data returned by this mouse click
                */
-                if (mfg.getReturnValueSelection() == ReturnValues.ALL_DATA) {
+                if (formsGraph.getReturnValueSelection() == ReturnValues.ALL_DATA) {
                     String dataObject = null;
 
                     // if the group (column data) is shown as row data (series) then the rowlabels and column
                     // labels needs to be swapped
-                    if (mfg.isShowGraphAsSeries()) {
+                    if (formsGraph.isShowGraphAsSeries()) {
                         dataObject = rowLabel + sDelimiter + columnLabel + sDelimiter + graphData.toString();
                     } else {
                         dataObject = columnLabel + sDelimiter + rowLabel + sDelimiter + graphData.toString();
                     }
-                    dataObject = mlrd.getPrimaryKey(dataObject, sDelimiter);
+                    dataObject = formsGraph.getLocalRelationalData().getPrimaryKey(dataObject, sDelimiter, formsGraph.isShowGraphAsSeries());
 
                     GraphInfo =
                             dataObject != null ? rowLabel + sDelimiter + columnLabel + sDelimiter + graphData.toString() +
@@ -143,60 +144,60 @@ public class GraphViewMouseListener implements ViewMouseListener, ActionListener
                             rowLabel + sDelimiter + columnLabel + sDelimiter + graphData.toString();
 
                     //GraphInfo =rowLabel+sDelimiter+columnLabel+sDelimiter+graphData.toString();
-                    debugMessage("mouseClicked() - Timer - Dispatch value '" + GraphInfo + "' to Forms");
-                    mfg.dispatchMouseAction(GraphInfo);
-                } else if (mfg.getReturnValueSelection() == ReturnValues.DATA_LABEL) {
-                    debugMessage("mouseClicked() - Timer - Mouse Click returns rowLabel");
+                    log.log(Level.FINE, "mouseClicked() - Timer - Dispatch value '" + GraphInfo + "' to Forms");
+                    formsGraph.dispatchMouseAction(GraphInfo);
+                } else if (formsGraph.getReturnValueSelection() == ReturnValues.DATA_LABEL) {
+                    log.log(Level.FINE, "mouseClicked() - Timer - Mouse Click returns rowLabel");
 
                     // if the group (column data) is shown as row data (series) then the rowlabels and column
                     // labels needs to be swapped
-                    if (mfg.isShowGraphAsSeries()) {
+                    if (formsGraph.isShowGraphAsSeries()) {
                         GraphInfo = columnLabel;
-                        debugMessage("mouseClicked() - Timer - Dispatch value '" + GraphInfo + "' to Forms");
+                        log.log(Level.FINE, "mouseClicked() - Timer - Dispatch value '" + GraphInfo + "' to Forms");
                     } else {
                         GraphInfo = rowLabel;
-                        debugMessage("mouseClicked() - Timer - Dispatch value '" + GraphInfo + "'' to Forms");
+                        log.log(Level.FINE, "mouseClicked() - Timer - Dispatch value '" + GraphInfo + "'' to Forms");
                     }
-                    mfg.dispatchMouseAction(GraphInfo);
-                } else if (mfg.getReturnValueSelection() == ReturnValues.DATA_COLUMN) {
-                    debugMessage("mouseClicked() - Timer - Mouse Click returns columnLabel");
+                    formsGraph.dispatchMouseAction(GraphInfo);
+                } else if (formsGraph.getReturnValueSelection() == ReturnValues.DATA_COLUMN) {
+                    log.log(Level.FINE, "mouseClicked() - Timer - Mouse Click returns columnLabel");
 
                     // if the group (column data) is shown as row data (series) then the rowlabels and column
                     // labels needs to be swapped
-                    if (mfg.isShowGraphAsSeries()) {
+                    if (formsGraph.isShowGraphAsSeries()) {
                         GraphInfo = rowLabel;
-                        debugMessage("mouseClicked() - Timer - Dispatch value '" + GraphInfo + "' to Forms");
+                        log.log(Level.FINE, "mouseClicked() - Timer - Dispatch value '" + GraphInfo + "' to Forms");
 
                     } else {
                         GraphInfo = columnLabel;
-                        debugMessage("mouseClicked() - Timer - Dispatch value '" + GraphInfo + "' to Forms");
+                        log.log(Level.FINE, "mouseClicked() - Timer - Dispatch value '" + GraphInfo + "' to Forms");
                     }
 
-                    mfg.dispatchMouseAction(GraphInfo);
-                } else if (mfg.getReturnValueSelection() == ReturnValues.DATA_VALUE) {
-                    debugMessage("mouseClicked() - Timer - Mouse Click returns rowValue");
+                    formsGraph.dispatchMouseAction(GraphInfo);
+                } else if (formsGraph.getReturnValueSelection() == ReturnValues.DATA_VALUE) {
+                    log.log(Level.FINE, "mouseClicked() - Timer - Mouse Click returns rowValue");
                     GraphInfo = graphData.toString();
-                    debugMessage("mouseClicked() - Timer - Dispatch value '" + GraphInfo + "' to Forms");
-                    mfg.dispatchMouseAction(GraphInfo);
+                    log.log(Level.FINE, "mouseClicked() - Timer - Dispatch value '" + GraphInfo + "' to Forms");
+                    formsGraph.dispatchMouseAction(GraphInfo);
                 }
                 //  return primary key only
-                else if (mfg.getReturnValueSelection() == ReturnValues.DATA_PRIMARY_KEY) {
+                else if (formsGraph.getReturnValueSelection() == ReturnValues.DATA_PRIMARY_KEY) {
                     String dataObject = null;
 
-                    debugMessage("mouseClicked() - Timer - Mouse Click returns Primary Key");
+                    log.log(Level.FINE, "mouseClicked() - Timer - Mouse Click returns Primary Key");
 
                     // if the group (column data) is shown as row data (series) then the rowlabels and column
                     // labels needs to be swapped
-                    if (mfg.isShowGraphAsSeries()) {
+                    if (formsGraph.isShowGraphAsSeries()) {
                         dataObject = rowLabel + sDelimiter + columnLabel + sDelimiter + graphData.toString();
                     } else {
                         dataObject = columnLabel + sDelimiter + rowLabel + sDelimiter + graphData.toString();
                     }
-                    GraphInfo = mlrd.getPrimaryKey(dataObject, sDelimiter);
-                    debugMessage("mouseClicked() - Timer - Dispatch value " + GraphInfo + " to Forms");
-                    mfg.dispatchMouseAction(GraphInfo);
+                    GraphInfo = formsGraph.getLocalRelationalData().getPrimaryKey(dataObject, sDelimiter, formsGraph.isShowGraphAsSeries());
+                    log.log(Level.FINE, "mouseClicked() - Timer - Dispatch value " + GraphInfo + " to Forms");
+                    formsGraph.dispatchMouseAction(GraphInfo);
                 } else {
-                    debugMessage("mouseClicked() - Timer - Mouse Click returns no value");
+                    log.log(Level.FINE, "mouseClicked() - Timer - Mouse Click returns no value");
                     // no value as none is selected for returnValueSelection
                 }
             }
@@ -209,42 +210,41 @@ public class GraphViewMouseListener implements ViewMouseListener, ActionListener
         } catch (EdgeOutOfRangeException eoore) {
             eoore.printStackTrace();
         }
-        debugMessage("mouseClicked() - Timer - Completed");
+        log.log(Level.FINE, "mouseClicked() - Timer - Completed");
     }
 
+    @Override
     public void mouseClicked(ViewMouseEvent p0) {
-        debugMessage("mouseClicked(): " + p0.getClickCount());
+        log.log(Level.FINE, "mouseClicked(): " + p0.getClickCount());
         objEvent = p0;
         Calendar rightNow = Calendar.getInstance();
         if (objTimer == null) {
-            debugMessage("mouseClicked() - Starting timer: " + rightNow.getTimeInMillis());
+            log.log(Level.FINE, "mouseClicked() - Starting timer: " + rightNow.getTimeInMillis());
             objTimer = new Timer(500, this);
             objTimer.setRepeats(false);
             objTimer.start();
         } else {
-            debugMessage("mouseClicked() - Restarting timer: " + rightNow.getTimeInMillis());
+            log.log(Level.FINE, "mouseClicked() - Restarting timer: " + rightNow.getTimeInMillis());
             objTimer.restart();
         }
-        debugMessage("mouseClicked(): Completed");
+        log.log(Level.FINE, "mouseClicked(): Completed");
     }
 
+    @Override
     public void mousePressed(ViewMouseEvent p0) {
-        debugMessage("mousePressed()");
+        log.log(Level.FINE, "mousePressed()");
     }
 
+    @Override
     public void mouseReleased(ViewMouseEvent p0) {
-        debugMessage("mouseReleased()");
+        log.log(Level.FINE, "mouseReleased()");
     }
 
     public void mouseEntered(ViewMouseEvent p0) {
-        //debugMessage("mouseEntered()");
+        //log.log(Level.FINE, "mouseEntered()");
     }
 
     public void mouseExited(ViewMouseEvent p0) {
-        //debugMessage("mouseExited()");
-    }
-
-    private void debugMessage(String dm) {
-        mfg.debugMessage(dm);
+        //log.log(Level.FINE, "mouseExited()");
     }
 }

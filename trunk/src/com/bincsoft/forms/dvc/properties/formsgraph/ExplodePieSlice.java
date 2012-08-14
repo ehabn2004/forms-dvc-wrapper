@@ -1,14 +1,11 @@
 package com.bincsoft.forms.dvc.properties.formsgraph;
 
 
-import com.bincsoft.forms.dvc.FormsGraph;
+import com.bincsoft.forms.BincsoftBean;
 
 import java.util.StringTokenizer;
 
-public class ExplodePieSlice implements IFormsGraphProperty {
-    public ExplodePieSlice() {
-        super();
-    }
+public class ExplodePieSlice extends FormsGraphPropertyHandler {
 
     /**
      * Moves the selected slice number away from the rest
@@ -16,14 +13,16 @@ public class ExplodePieSlice implements IFormsGraphProperty {
      * @param sParams
      * @return
      */
-    public boolean handleProperty(String sParams, FormsGraph graph) {
+    @Override
+    public boolean handleProperty(String sParams, BincsoftBean bean) {
+        super.handleProperty(sParams, bean);
         // _object contains a delimited String containing values, where
         // the second value must be between 0 and 100. The first should not exceed
         // the number of graph columns available or be negative
 
         if (sParams.length() == 0) {
             // go read the manual !
-            graph.debugMessage("EXPLODE_PIESLICE requires attribute passed. please refer to the" +
+            log("EXPLODE_PIESLICE requires attribute passed. please refer to the" +
                                " documentation on how to use this property.");
         } else {
             // some exceptions may be raised on the way, so we prep for it
@@ -34,15 +33,15 @@ public class ExplodePieSlice implements IFormsGraphProperty {
                 int tokenLength = st.countTokens();
                 if (tokenLength != 2) {
                     // go read the manual !
-                    graph.debugMessage("EXPLODE_PIESLICE requires attribute passed. please refer to the" +
+                    log("EXPLODE_PIESLICE requires attribute passed. please refer to the" +
                                        " documentation on how to use this property.");
                 } else {
                     val[0] = (String)st.nextElement();
                     val[1] = (String)st.nextElement();
 
-                    graph.debugMessage("EXPLODE_PIESLICE: Attributes passed: " +
+                    log("EXPLODE_PIESLICE: Attributes passed: " +
                                        sParams);
-                    graph.debugMessage("EXPLODE_PIESLICE: After untokenizing String: series=" +
+                    log("EXPLODE_PIESLICE: After untokenizing String: series=" +
                                        val[0] + " and explode rate=" + val[1]);
 
                     int Series = 0;
@@ -68,8 +67,8 @@ public class ExplodePieSlice implements IFormsGraphProperty {
                                                                     Series);
                 }
             } catch (NumberFormatException nfe) {
-                graph.debugMessage("EXPLODE_PIESLICE: Not a valid integer format passed");
-                graph.debugMessage(nfe.getMessage());
+                log("EXPLODE_PIESLICE: Not a valid integer format passed");
+                log(nfe.getMessage());
             }
 
             catch (Exception ex) {

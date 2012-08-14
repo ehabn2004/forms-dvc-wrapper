@@ -1,15 +1,12 @@
 package com.bincsoft.forms.dvc.properties.formsgraph;
 
-import com.bincsoft.forms.dvc.FormsGraph;
+import com.bincsoft.forms.BincsoftBean;
 
-
-public class HideFrame implements IFormsGraphProperty {
-    public HideFrame() {
-        super();
-    }
-
-    public boolean handleProperty(String sParams, FormsGraph graph) {
-        graph.debugMessage("HIDE_FRAME: hiding");
+public class HideFrame extends FormsGraphPropertyHandler {
+    @Override
+    public boolean handleProperty(String sParams, BincsoftBean bean) {
+        super.handleProperty(sParams, bean);
+        log("HIDE_FRAME: hiding");
         if (graph.getSeparateFrame() != null) {
             graph.getSeparateFrame().setVisible(false);
             graph.getSeparateFrame().getContentPane().remove(0);

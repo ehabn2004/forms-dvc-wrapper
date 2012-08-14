@@ -1,24 +1,20 @@
 package com.bincsoft.forms.dvc.properties.formsgraph;
 
-import com.bincsoft.forms.dvc.FormsGraph;
+import com.bincsoft.forms.BincsoftBean;
 
-
-public class RemoveData implements IFormsGraphProperty {
-    public RemoveData() {
-        super();
-    }
-
-    public boolean handleProperty(String sParams, FormsGraph graph) {
-        if (!sParams.equals("")) {
-            if (graph.getLocalRelationalData().RemoveData(sParams, graph.getDelimiter())) {
+public class RemoveData extends FormsGraphPropertyHandler {
+    @Override
+    public boolean handleProperty(String sParams, BincsoftBean bean) {
+        if (super.handleProperty(sParams, bean)) {
+            if (graph.getLocalRelationalData().RemoveData(sParams, graph.getDelimiter(), graph.isShowGraphAsSeries())) {
                 // refresh data shown in the graph
                 // m_graph.setLocalRelationalData(lrd.getRelationalData());
                 graph.getGraph().setTabularData(graph.getLocalRelationalData().getRelationalData());
             } else {
-                graph.debugMessage("REMOVE_DATA: No row matches search criteria!");
+                log("REMOVE_DATA: No row matches search criteria!");
             }
         } else {
-            graph.debugMessage("REMOVE_DATA: No data passed, command ignored!");
+            log("REMOVE_DATA: No data passed, command ignored!");
         }
         return true;
     }

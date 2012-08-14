@@ -1,30 +1,27 @@
 package com.bincsoft.forms.dvc.properties.formsgraph;
 
 
-import com.bincsoft.forms.dvc.FormsGraph;
+import com.bincsoft.forms.BincsoftBean;
 
 import oracle.dss.graph.Graph;
 
-public class ScrollBar implements IFormsGraphProperty {
-    public ScrollBar() {
-        super();
-    }
-
-    public boolean handleProperty(String sParams, FormsGraph graph) {
-        if (!sParams.equals("")) {
-            graph.debugMessage("SCROLLBAR: setting value to " + sParams);
+public class ScrollBar extends FormsGraphPropertyHandler {
+    @Override
+    public boolean handleProperty(String sParams, BincsoftBean bean) {
+        if (super.handleProperty(sParams, bean)) {
+            log("SCROLLBAR: setting value to " + sParams);
             if ("TRUE".equalsIgnoreCase(sParams)) {
                 graph.getGraph().setScrollbarPresenceGroups(Graph.SP_AS_NEEDED);
             } else if ("FALSE".equalsIgnoreCase(sParams)) {
                 // disabling scrollbars
                 graph.getGraph().setScrollbarPresenceGroups(Graph.SP_NEVER);
             } else {
-                graph.debugMessage("SCROLLBAR: value " + sParams +
+                log("SCROLLBAR: value " + sParams +
                                    " does not contain TRUE or FALSE");
             }
 
         } else {
-            graph.debugMessage("SCROLLBAR: no value associated with command");
+            log("SCROLLBAR: no value associated with command");
         }
         return true;
     }

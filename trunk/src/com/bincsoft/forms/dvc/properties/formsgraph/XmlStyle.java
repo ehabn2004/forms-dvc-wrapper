@@ -1,24 +1,22 @@
 package com.bincsoft.forms.dvc.properties.formsgraph;
 
 
-import com.bincsoft.forms.dvc.FormsGraph;
+import com.bincsoft.forms.BincsoftBean;
 
 import oracle.dss.util.CustomStyle;
 
-public class XmlStyle implements IFormsGraphProperty {
-    public XmlStyle() {
-        super();
-    }
-
-    public boolean handleProperty(String sParams, FormsGraph graph) {
-        graph.debugMessage("SET_XML_STYLE: Setting style from string...");
+public class XmlStyle extends FormsGraphPropertyHandler {
+    @Override
+    public boolean handleProperty(String sParams, BincsoftBean bean) {
+        super.handleProperty(sParams, bean);
+        log("SET_XML_STYLE: Setting style from string...");
         try {
             CustomStyle style = new CustomStyle(sParams);
             graph.getGraph().setStyle(style);
         } catch (Exception ex) {
-            graph.debugMessage("SET_XML_STYLE: " + ex);
+            log("SET_XML_STYLE: " + ex);
         }
-        graph.debugMessage("SET_XML_STYLE: Done!");
+        log("SET_XML_STYLE: Done!");
         return true;
     }
 }

@@ -1,23 +1,27 @@
 package com.bincsoft.forms.dvc.properties.formsgraph;
 
-
+import com.bincsoft.forms.BincsoftBean;
 import com.bincsoft.forms.dvc.DvcHelper;
 import com.bincsoft.forms.dvc.FormsGraph;
 
+import com.bincsoft.forms.dvc.GraphText;
+
 import java.io.InputStream;
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import oracle.dss.graph.Graph;
 import oracle.dss.graph.GraphConstants;
 import oracle.dss.util.CustomStyle;
 import oracle.dss.util.format.BaseViewFormat;
 
-public class ResetGraph implements IFormsGraphProperty {
-    public ResetGraph() {
-        super();
-    }
 
-    public boolean handleProperty(String sParams, FormsGraph graph) {
-        graph.debugMessage("RESET_GRAPH");
+public class ResetGraph extends FormsGraphPropertyHandler {
+    @Override
+    public boolean handleProperty(String sParams, BincsoftBean bean) {
+        super.handleProperty(sParams, bean);
+        log("RESET_GRAPH");
         //m_graph.resetToDefault(GraphConstants.RESET_EVERYTHING);
         graph.getGraph().resetToDefault(GraphConstants.RESET_XML_PROPERTIES);
         setDefaults(graph);
@@ -37,6 +41,8 @@ public class ResetGraph implements IFormsGraphProperty {
         graph.getGraph().getY1Axis().getViewFormat().setScaleFactor(BaseViewFormat.SCALEFACTOR_NONE);
         // have the Bean managing the layout of the Graph
         graph.getGraph().setAutoLayout(Graph.AL_ALWAYS);
+        // set default font
+        graph.getGraph().setFontName(GraphText.DEFAULT_FONT.getFontName());
         // the graph is first shown when data is provided
         graph.getGraph().setVisible(false);
     }
@@ -45,15 +51,16 @@ public class ResetGraph implements IFormsGraphProperty {
      * Methods for finding and setting XML styles
      */
     public static void setDefaultStyle(FormsGraph graph) {
-        graph.debugMessage("setDefaultStyle()");
-        InputStream is = graph.getGraph().getClass().getResourceAsStream(graph.DEFAULT_XML_STYLE);
+        Logger log = Logger.getLogger(ResetGraph.class.getName());
+        log.log(Level.FINE, "setDefaultStyle()");
+        InputStream is = graph.getGraph().getClass().getResourceAsStream(graph.getDefaultXmlStyle());
         try {
             //System.out.println(convertStreamToString(is));
             CustomStyle style = new CustomStyle(DvcHelper.convertStreamToString(is));
             is.close();
             graph.getGraph().setStyle(style);
         } catch (Exception ex) {
-            graph.debugMessage("setDefaultStyle(): " + ex);
+            log.log(Level.FINE, "setDefaultStyle(): " + ex);
         }
     }
 }

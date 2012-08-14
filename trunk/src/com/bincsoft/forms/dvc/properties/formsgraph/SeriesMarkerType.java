@@ -1,7 +1,7 @@
 package com.bincsoft.forms.dvc.properties.formsgraph;
 
 
-import com.bincsoft.forms.dvc.FormsGraph;
+import com.bincsoft.forms.BincsoftBean;
 
 import java.util.StringTokenizer;
 
@@ -12,13 +12,11 @@ import oracle.dss.util.MetadataMap;
 import oracle.dss.util.SeriesOutOfRangeException;
 import oracle.dss.util.SliceOutOfRangeException;
 
-public class SeriesMarkerType implements IFormsGraphProperty {
-    public SeriesMarkerType() {
-        super();
-    }
 
-    public boolean handleProperty(String sParams, FormsGraph graph) {
-        if (sParams.length() > 0) {
+public class SeriesMarkerType extends FormsGraphPropertyHandler {
+    @Override
+    public boolean handleProperty(String sParams, BincsoftBean bean) {
+        if (super.handleProperty(sParams, bean)) {
             // separate series name from string
             StringTokenizer st =
                 new StringTokenizer(sParams, graph.getDelimiter());
@@ -40,7 +38,7 @@ public class SeriesMarkerType implements IFormsGraphProperty {
                 else if ("MT_DEFAULT".equalsIgnoreCase(seriesType))
                     series_type = BaseGraphComponent.MT_DEFAULT;
                 else {
-                    graph.debugMessage("Property SET_SERIES_MARKER_TYPE: " +
+                    log("Property SET_SERIES_MARKER_TYPE: " +
                                        sParams +
                                        " does not contain a valid marker type");
                     return true;
@@ -51,7 +49,7 @@ public class SeriesMarkerType implements IFormsGraphProperty {
                 try {
                     series_count = graph.getGraph().getColumnCount();
                 } catch (EdgeOutOfRangeException ex) {
-                    graph.debugMessage("SET_SERIES_MARKER_TYPE: " + ex);
+                    log("SET_SERIES_MARKER_TYPE: " + ex);
                     return true;
                 }
 
@@ -63,33 +61,33 @@ public class SeriesMarkerType implements IFormsGraphProperty {
                                                                                  i,
                                                                                  MetadataMap.METADATA_LONGLABEL);
                     } catch (SliceOutOfRangeException ex) {
-                        graph.debugMessage("SET_SERIES_MARKER_TYPE: " + ex);
+                        log("SET_SERIES_MARKER_TYPE: " + ex);
                         return true;
                     } catch (EdgeOutOfRangeException ex) {
-                        graph.debugMessage("SET_SERIES_MARKER_TYPE: " + ex);
+                        log("SET_SERIES_MARKER_TYPE: " + ex);
                         return true;
                     }
                     if (seriesName.equalsIgnoreCase(shortLabel.trim())) {
                         try {
                             graph.getGraph().getSeries().setMarkerType(series_type,
                                                                        i);
-                            graph.debugMessage("Property SET_SERIES_MARKER_TYPE: Series '" +
+                            log("Property SET_SERIES_MARKER_TYPE: Series '" +
                                                seriesName + "' found");
                             break;
                         } catch (SeriesOutOfRangeException sour) {
-                            graph.debugMessage("Property SET_SERIES_MARKER_TYPE: Series out of range exception");
+                            log("Property SET_SERIES_MARKER_TYPE: Series out of range exception");
                             return true;
                         }
                     }
                 }
                 return true;
             } else {
-                graph.debugMessage("SET_SERIES_MARKER_TYPE: not enough arguments specified in " +
+                log("SET_SERIES_MARKER_TYPE: not enough arguments specified in " +
                                    sParams);
                 return true;
             }
         } else {
-            graph.debugMessage("SET_SERIES_MARKER_TYPE: no argument specified");
+            log("SET_SERIES_MARKER_TYPE: no argument specified");
             return true;
         }
     }

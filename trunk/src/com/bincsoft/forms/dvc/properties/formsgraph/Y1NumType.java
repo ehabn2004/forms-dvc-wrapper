@@ -1,17 +1,14 @@
 package com.bincsoft.forms.dvc.properties.formsgraph;
 
 
-import com.bincsoft.forms.dvc.FormsGraph;
+import com.bincsoft.forms.BincsoftBean;
 
 import oracle.dss.dataView.managers.ViewFormat;
 
-public class Y1NumType implements IFormsGraphProperty {
-    public Y1NumType() {
-        super();
-    }
-
-    public boolean handleProperty(String sParams, FormsGraph graph) {
-        if (!sParams.equals("")) {
+public class Y1NumType extends FormsGraphPropertyHandler {
+    @Override
+    public boolean handleProperty(String sParams, BincsoftBean bean) {
+        if (super.handleProperty(sParams, bean)) {
             // check for percent argument
             if ("%".equalsIgnoreCase(sParams)) {
                 graph.getGraph().getY1Axis().getViewFormat().setNumberType(ViewFormat.NUMTYPE_PERCENT);
@@ -23,7 +20,7 @@ public class Y1NumType implements IFormsGraphProperty {
                 graph.getGraph().getY1Axis().getViewFormat().setCurrencySymbol(sParams);
             }
         } else {
-            graph.debugMessage("Not a valid argument in call to SET_Y1_NUMBER_TYPE");
+            log("Not a valid argument in call to SET_Y1_NUMBER_TYPE");
         }
         return true;
     }

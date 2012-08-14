@@ -1,17 +1,13 @@
 package com.bincsoft.forms.dvc.properties.formsgraph;
 
-import com.bincsoft.forms.dvc.FormsGraph;
+import com.bincsoft.forms.BincsoftBean;
 
-
-public class MaxScaleY2Axis implements IFormsGraphProperty {
-    public MaxScaleY2Axis() {
-        super();
-    }
-
-    public boolean handleProperty(String sParams, FormsGraph graph) {
+public class MaxScaleY2Axis extends FormsGraphPropertyHandler {
+    @Override
+    public boolean handleProperty(String sParams, BincsoftBean bean) {
+        super.handleProperty(sParams, bean);
         if (sParams.length() == 0) {
-            // go read the manual !
-            graph.debugMessage("MAX_SCALE_Y2_AXIS, scaling needs a maximum value to be provided. Please refer to the" +
+            log("MAX_SCALE_Y2_AXIS, scaling needs a maximum value to be provided. Please refer to the" +
                                " documentation on how to use this property.");
         } else {
             // exceptions may be raised on the way, so we prep for it
@@ -28,8 +24,8 @@ public class MaxScaleY2Axis implements IFormsGraphProperty {
                     graph.getGraph().getY2Axis().setAxisMaxValue(maxValue);
                 }
             } catch (NumberFormatException nfe) {
-                graph.debugMessage("MAX_SCALE_Y2_AXIS: Not a valid integer format passed");
-                graph.debugMessage(nfe.getMessage());
+                log("MAX_SCALE_Y2_AXIS: Not a valid integer format passed");
+                log(nfe.getMessage());
             }
         }
         return true;

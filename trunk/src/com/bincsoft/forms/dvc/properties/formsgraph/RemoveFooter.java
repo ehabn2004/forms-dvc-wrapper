@@ -1,15 +1,12 @@
 package com.bincsoft.forms.dvc.properties.formsgraph;
 
-import com.bincsoft.forms.dvc.FormsGraph;
+import com.bincsoft.forms.BincsoftBean;
 
-
-public class RemoveFooter implements IFormsGraphProperty {
-    public RemoveFooter() {
-        super();
-    }
-
-    public boolean handleProperty(String sParams, FormsGraph graph) {
-        graph.debugMessage("HIDE_FOOTER: hiding");
+public class RemoveFooter extends FormsGraphPropertyHandler {
+    @Override
+    public boolean handleProperty(String sParams, BincsoftBean bean) {
+        super.handleProperty(sParams, bean);
+        log("HIDE_FOOTER: hiding");
         graph.getGraph().getDataviewFootnote().setVisible(false);
         return true;
     }

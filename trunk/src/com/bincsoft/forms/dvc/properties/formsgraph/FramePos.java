@@ -1,18 +1,15 @@
 package com.bincsoft.forms.dvc.properties.formsgraph;
 
 
-import com.bincsoft.forms.dvc.FormsGraph;
+import com.bincsoft.forms.BincsoftBean;
 
 import java.util.StringTokenizer;
 
-public class FramePos implements IFormsGraphProperty {
-    public FramePos() {
-        super();
-    }
-
-    public boolean handleProperty(String sParams, FormsGraph graph) {
-        if (!sParams.equals("")) {
-            graph.debugMessage("FRAME_POS: trying to set position to " + sParams);
+public class FramePos extends FormsGraphPropertyHandler {
+    @Override
+    public boolean handleProperty(String sParams, BincsoftBean bean) {
+        if (super.handleProperty(sParams, bean)) {
+            log("FRAME_POS: trying to set position to " + sParams);
             StringTokenizer st = new StringTokenizer(sParams, graph.getDelimiter());
             int tokenLength = st.countTokens();
             String firstToken = "", secondToken = "";
@@ -30,12 +27,12 @@ public class FramePos implements IFormsGraphProperty {
                 }
 
             } catch (NumberFormatException nfe) {
-                graph.debugMessage("FRAME_POS Exception: Data passed for x and y postion could not be converted to int");
+                log("FRAME_POS Exception: Data passed for x and y postion could not be converted to int");
             } catch (Exception e) {
-                graph.debugMessage("FRAME_POS: Exception" + e.getMessage());
+                log("FRAME_POS: Exception" + e.getMessage());
             }
         } else {
-            graph.debugMessage("FRAME_POS: No positional attributes passed - Ignoring command");
+            log("FRAME_POS: No positional attributes passed - Ignoring command");
         }
         return true;
     }

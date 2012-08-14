@@ -2,24 +2,23 @@ package com.bincsoft.forms.dvc.properties.formsgraph;
 
 
 import com.bincsoft.forms.dvc.FormsGraph;
+import com.bincsoft.forms.BincsoftBean;
 
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 import javax.swing.JFrame;
-import javax.swing.JInternalFrame;
 
-public class GraphInFrame implements IFormsGraphProperty {
+
+public class GraphInFrame extends FormsGraphPropertyHandler {
     private String _windowTitle = "Forms - BI Graph"; // title of separate frame
     private FormsGraph _graph = null;
     
-    public GraphInFrame() {
-        super();
-    }
-
-    public boolean handleProperty(String sParams, FormsGraph graph) {
+    @Override
+    public boolean handleProperty(String sParams, BincsoftBean bean) {
+        super.handleProperty(sParams, bean);
         _graph = graph;
-        graph.debugMessage("GRAPH_IN_FRAME: adding to frame");
+        log("GRAPH_IN_FRAME: adding to frame");
         int iWidth = 0;
         int iHeight = 0;
         if (sParams != null && !sParams.equals("")) {

@@ -1,16 +1,15 @@
 package com.bincsoft.forms.dvc.properties.formsgraph;
 
-import com.bincsoft.forms.dvc.FormsGraph;
+import com.bincsoft.forms.BincsoftBean;
+import com.bincsoft.forms.dvc.GraphTypeRegistry;
 
-
-public class GraphType implements IFormsGraphProperty {
-    public GraphType() {
-        super();
-    }
-
-    public boolean handleProperty(String sParams, FormsGraph graph) {
-        graph.debugMessage("GRAPH_TYPE: trying to set graph type");
-        graph.getGraph().setGraphType((sParams.equals("") ? graph.getGraphType() : graph.getInternalGraphType(sParams)));
+public class GraphType extends FormsGraphPropertyHandler {
+    @Override
+    public boolean handleProperty(String sParams, BincsoftBean bean) {
+        if (super.handleProperty(sParams, bean)) {
+            int graphType = GraphTypeRegistry.getTypeForString(sParams);
+            graph.getGraph().setGraphType(graphType == GraphTypeRegistry.NO_GRAPH_TYPE_FOUND ? graph.getDefaultGraphType() : graphType);
+        }
         return true;
     }
 }

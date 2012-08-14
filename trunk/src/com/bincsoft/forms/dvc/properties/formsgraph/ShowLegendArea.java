@@ -1,17 +1,14 @@
 package com.bincsoft.forms.dvc.properties.formsgraph;
 
-import com.bincsoft.forms.dvc.FormsGraph;
+import com.bincsoft.forms.BincsoftBean;
 
-
-public class ShowLegendArea implements IFormsGraphProperty {
-    public ShowLegendArea() {
-        super();
-    }
-
-    public boolean handleProperty(String sParams, FormsGraph graph) {
+public class ShowLegendArea extends FormsGraphPropertyHandler {
+   @Override
+    public boolean handleProperty(String sParams, BincsoftBean bean) {
+       super.handleProperty(sParams, bean);
         boolean bEnable = sParams.equalsIgnoreCase("FALSE") ? false : true;
         graph.getGraph().getLegendArea().setVisible(bEnable);
-        graph.debugMessage("SHOW_LEGEND: " + bEnable);
+        log("SHOW_LEGEND: " + bEnable);
         return true;
     }
 }

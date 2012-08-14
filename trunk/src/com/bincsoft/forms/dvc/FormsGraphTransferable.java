@@ -1,5 +1,7 @@
 package com.bincsoft.forms.dvc;
 
+import com.bincsoft.forms.dvc.FormsGraph;
+
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
@@ -16,7 +18,11 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 public class FormsGraphTransferable implements Transferable {
+    Logger log = Logger.getLogger(getClass().getName());
     FormsGraph m_graph = null;
     
     public FormsGraphTransferable(FormsGraph graph) {
@@ -56,11 +62,11 @@ public class FormsGraphTransferable implements Transferable {
             String sTitle = m_graph.getGraph().getDataviewTitle().getText();
 
             if (sTitle == null || sTitle.equals("")) {
-                m_graph.debugMessage("Graph title is empty, skipping...");
+                log.log(Level.FINE, "Graph title is empty, skipping...");
                 return image;
             }
 
-            m_graph.debugMessage("Graph title: '" + sTitle + "'");
+            log.log(Level.FINE, "Graph title: '" + sTitle + "'");
 
             Font font = m_graph.getGraph().getDataviewTitle().getFont();
             FontMetrics fm = m_graph.getFontMetrics(font);
@@ -68,7 +74,7 @@ public class FormsGraphTransferable implements Transferable {
             int iStringHeight = fm.getHeight();
             int iImageWidth = m_graph.getParent().getWidth();
             int iImageHeight = m_graph.getParent().getHeight();
-            m_graph.debugMessage("iImageWidth=" + iImageWidth + " iImageHeight=" +
+            log.log(Level.FINE, "iImageWidth=" + iImageWidth + " iImageHeight=" +
                          iImageHeight + " iStringWidth=" + iStringWidth +
                          " iStringHeight=" + iStringHeight);
             iStringHeight += 2; // Add some space between title and image

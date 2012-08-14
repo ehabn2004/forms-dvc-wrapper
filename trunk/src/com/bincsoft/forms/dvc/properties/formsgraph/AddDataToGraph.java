@@ -1,45 +1,47 @@
 package com.bincsoft.forms.dvc.properties.formsgraph;
 
+
+import com.bincsoft.forms.BincsoftBean;
+import com.bincsoft.forms.Utils;
 import com.bincsoft.forms.dvc.FormsGraph;
 
 import java.awt.Component;
 import java.awt.KeyboardFocusManager;
+import java.awt.image.BufferedImage;
 
 import java.beans.PropertyChangeEvent;
-
 import java.beans.PropertyChangeListener;
 
 import java.util.ArrayList;
 
 import oracle.forms.ui.ExtendedFrame;
 
-public class AddDataToGraph implements IFormsGraphProperty, PropertyChangeListener {
+
+public class AddDataToGraph extends FormsGraphPropertyHandler implements PropertyChangeListener {
     private ExtendedFrame frmOwnerFrame = null;
-    private FormsGraph graph = null;
+    private FormsGraph formsGraph = null;
+    private boolean bHasFocus = false;
 
-    public AddDataToGraph() {
-        super();
-    }
-
-    public boolean handleProperty(String sParams, FormsGraph graph) {
-        this.graph = graph;
-        graph.debugMessage("ADD_DATA_TO_GRAPH: setting data for display");
+    @Override
+    public boolean handleProperty(String sParams, BincsoftBean bean) {
+        super.handleProperty(sParams, bean);
+        this.formsGraph = graph;
+        log("ADD_DATA_TO_GRAPH: setting data for display");
         ArrayList al = graph.getLocalRelationalData().getRelationalData();
-        graph.debugMessage("ADD_DATA_TO_GRAPH: Size of arraylist: " +
-                           al.size());
+        log("ADD_DATA_TO_GRAPH: Size of arraylist: " + al.size());
         // handle no data passed
         if (al.size() == 0) {
-            graph.debugMessage("ADD_DATA_TO_GRAPH: decide on the response in the UI");
+            log("ADD_DATA_TO_GRAPH: decide on the response in the UI");
             graph.noGraphDataFoundHandler();
         } else {
             // if the graph component previously have been removed from
             // the Graph then it needs to be added back there
             if (graph.isRecoverGraphToVBean()) {
-                graph.debugMessage("ADD_DATA_TO_GRAPH: remove component that was added insetad of the graph");
+                log("ADD_DATA_TO_GRAPH: remove component that was added instead of the graph");
                 graph.removeGraph();
-                graph.debugMessage("ADD_DATA_TO_GRAPH: add graph for display");
+                log("ADD_DATA_TO_GRAPH: add graph for display");
                 graph.addGraph();
-                graph.debugMessage("ADD_DATA_TO_GRAPH: reset flag");
+                log("ADD_DATA_TO_GRAPH: reset flag");
                 graph.setRecoverGraphToVBean(false);
             }
             graph.getGraph().setVisible(true);
@@ -48,22 +50,55 @@ public class AddDataToGraph implements IFormsGraphProperty, PropertyChangeListen
 
             if (!graph.isFocusListenerAdded()) {
                 // Add a keyboardfocuslistener to fix heavy/lightweight problem
-                frmOwnerFrame = graph.getOwnerWindow(graph);
-                KeyboardFocusManager focusManager =
-                    KeyboardFocusManager.getCurrentKeyboardFocusManager();
+                frmOwnerFrame = Utils.getInstance().getOwnerWindow(graph);
+                KeyboardFocusManager focusManager = KeyboardFocusManager.getCurrentKeyboardFocusManager();
                 focusManager.addPropertyChangeListener(this);
                 graph.setFocusListenerAdded(true);
             }
         }
-        graph.debugMessage("ADD_DATA_TO_GRAPH: finished");
+        log("ADD_DATA_TO_GRAPH: finished");
         return true;
     }
 
+    @Override
     public void propertyChange(PropertyChangeEvent e) {
-        if (e.getPropertyName().equals("focusOwner") &&
-            e.getNewValue() != null && e.getNewValue() instanceof Component) {
-            graph.getGlassPanel().setVisible(!graph.isChildFocusOwner(frmOwnerFrame,
-                                                                      (Component)e.getNewValue()));
+        //glassPaneSolution(e);
+        screenshotSolution(e);
+    }
+
+    private void glassPaneSolution(PropertyChangeEvent e) {
+        if (e.getPropertyName().equals("permanentFocusOwner") && e.getNewValue() != null &&
+            e.getNewValue() instanceof Component) {
+            log(String.format("%s received/lost focus", frmOwnerFrame.getTitle()));
+            boolean bFocused = Utils.getInstance().isChildFocusOwner(frmOwnerFrame, (Component)e.getNewValue());
+            formsGraph.getGlassPanel().setVisible(!bFocused);
+        } else {
+            log(e.getPropertyName());
+        }
+    }
+
+    private void screenshotSolution(PropertyChangeEvent e) {
+        if (e.getPropertyName().equals("permanentFocusOwner") && e.getNewValue() != null &&
+            e.getNewValue() instanceof Component && frmOwnerFrame != null) {
+            boolean bGainedFocus = Utils.getInstance().isChildFocusOwner(frmOwnerFrame, (Component)e.getNewValue());
+            if (bGainedFocus) {
+                if (!bHasFocus) {
+                    formsGraph.removeGraphScreenshot();
+                    bHasFocus = true;
+                }
+            } else {
+                if (bHasFocus && formsGraph.getInternalFrame() != null &&
+                    formsGraph.getInternalFrame().getHeight() != 0 && formsGraph.getInternalFrame().getWidth() != 0) {
+                    try {
+                        BufferedImage image = new BufferedImage(formsGraph.getInternalFrame().getWidth(), formsGraph.getInternalFrame().getHeight(), BufferedImage.TYPE_INT_RGB);
+                        formsGraph.getInternalFrame().paint(image.createGraphics());
+                        formsGraph.setGraphScreenshot(image);
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+                    bHasFocus = false;
+                }
+            }
         }
     }
 }

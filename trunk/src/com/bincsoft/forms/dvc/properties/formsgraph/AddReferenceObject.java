@@ -1,8 +1,8 @@
 package com.bincsoft.forms.dvc.properties.formsgraph;
 
 
+import com.bincsoft.forms.BincsoftBean;
 import com.bincsoft.forms.dvc.ColorCodeRegistry;
-import com.bincsoft.forms.dvc.FormsGraph;
 
 import java.awt.Color;
 
@@ -10,21 +10,19 @@ import oracle.dss.graph.BaseGraphComponent;
 import oracle.dss.graph.GraphConstants;
 import oracle.dss.graph.ReferenceObject;
 
-public class AddReferenceObject implements IFormsGraphProperty {
-    public AddReferenceObject() {
-        super();
-    }
 
-    public boolean handleProperty(String sParams, FormsGraph graph) {
-        if (sParams.length() > 0) {
-            graph.debugMessage("ADD_REFERENCE_OBJECT: Delimiter is '" + graph.getDelimiter() + "'.");
+public class AddReferenceObject extends FormsGraphPropertyHandler {
+    @Override
+    public boolean handleProperty(String sParams, BincsoftBean bean) {
+        if (super.handleProperty(sParams, bean)) {
+            log("ADD_REFERENCE_OBJECT: Delimiter is '" + graph.getDelimiter() + "'.");
             String[] aParams = sParams.split(graph.getDelimiter());
-            graph.debugMessage("ADD_REFERENCE_OBJECT: Received " + aParams.length + " parameters.");
+            log("ADD_REFERENCE_OBJECT: Received " + aParams.length + " parameters.");
             for (String s : aParams)
-                graph.debugMessage(s);
+                log(s);
 
             if (aParams.length != 9 && aParams.length != 10) {
-                graph.debugMessage("ADD_REFERENCE_OBJECT: Incorrect no. of parameters, need 9 for a line and 10 for an area.");
+                log("ADD_REFERENCE_OBJECT: Incorrect no. of parameters, need 9 for a line and 10 for an area.");
                 return true;
             }
 
@@ -80,7 +78,7 @@ public class AddReferenceObject implements IFormsGraphProperty {
             } else
                 refObj.setLineValue(Double.valueOf(aParams[8]).doubleValue());
         } else {
-            graph.debugMessage("ADD_REFERENCE_OBJECT: No valid parameters passed with request.");
+            log("ADD_REFERENCE_OBJECT: No valid parameters passed with request.");
         }
         return true;
     }
