@@ -61,7 +61,7 @@
 		<dependency>
 			<groupId>com.oracle.dvc</groupId>
 			<artifactId>xmlparserv2</artifactId>
-			<version>1</version>
+			<version>${dvc.version}</version>
 		</dependency>
 
 		<dependency>
