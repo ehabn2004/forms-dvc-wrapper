@@ -36,46 +36,46 @@
 			<url>file://${project.basedir}/lib</url>
 		</repository>
 	</repositories>
-	
+
 	<dependencies>
-	    <dependency>
-	        <groupId>com.oracle.forms</groupId>
-	        <artifactId>frmall</artifactId>
-	        <version>${forms.version}</version>
-	    </dependency>
-	    <dependency>
-	        <groupId>com.oracle.dvc</groupId>
-	        <artifactId>dvt-jclient</artifactId>
-	        <version>${dvc.version}</version>
-	    </dependency>
-	    <dependency>
-	        <groupId>com.oracle.dvc</groupId>
-	        <artifactId>dvt-utils</artifactId>
-	        <version>${dvc.version}</version>
-	    </dependency>
-	    <dependency>
-	        <groupId>com.oracle.dvc</groupId>
-	        <artifactId>jewt4</artifactId>
-	        <version>${dvc.version}</version>
-	    </dependency>
-	    <dependency>
-	        <groupId>com.oracle.dvc</groupId>
-	        <artifactId>xmlparserv2</artifactId>
-	        <version>1</version>
-	    </dependency>
-	    
-	    <dependency>
-	        <groupId>junit</groupId>
-	        <artifactId>junit</artifactId>
-	        <version>${junit.version}</version>
-	        <scope>test</scope>
-	    </dependency>
-	    <dependency>
-	        <groupId>org.mockito</groupId>
-	        <artifactId>mockito-all</artifactId>
-	        <version>${mockito.version}</version>
-	        <scope>test</scope>
-	    </dependency>
+		<dependency>
+			<groupId>com.oracle.forms</groupId>
+			<artifactId>frmall</artifactId>
+			<version>${forms.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.oracle.dvc</groupId>
+			<artifactId>dvt-jclient</artifactId>
+			<version>${dvc.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.oracle.dvc</groupId>
+			<artifactId>dvt-utils</artifactId>
+			<version>${dvc.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.oracle.dvc</groupId>
+			<artifactId>jewt4</artifactId>
+			<version>${dvc.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.oracle.dvc</groupId>
+			<artifactId>xmlparserv2</artifactId>
+			<version>1</version>
+		</dependency>
+
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>${junit.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-all</artifactId>
+			<version>${mockito.version}</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -87,6 +87,15 @@
 				<configuration>
 					<source>${java.version}</source>
 					<target>${java.version}</target>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>2.9.1</version>
+				<configuration>
+				     <reportOutputDirectory>${project.basedir}/doc</reportOutputDirectory>
+				     <destDir>forms-dvc-wrapper-javadoc</destDir>
 				</configuration>
 			</plugin>
 		</plugins>
