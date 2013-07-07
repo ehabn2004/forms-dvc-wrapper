@@ -25,4 +25,14 @@ To deploy this project:
 8. Sign all the JAR files.
 9. Run your Forms application.
 
+Deploy with Maven:
+1. Find frmall.jar in your Oracle Forms installation and copy it to {forms-dvc-wrapper}/lib.
+2. Find dvt-jclient.jar, dvt-utils.jar, jewt4.jar, xmlparserv2.jar and copy them to {forms-dvc-wrapper}/lib.
+3. Create a sub folder in {forms-dvc-wrapper}/lib/com/oracle/forms/frmall matching the version of your Oracle Forms installation. Example: 11g.
+4. Move frmall.jar from {forms-dvc-wrapper}/lib to {forms-dvc-wrapper}/lib/com/oracle/forms/frmall/{version}.
+5. Rename frmall.jar to frmall-{version}.jar. Example: frmall-11g.jar.
+6. Repeat step 3 through 5 for dvt-jclient.jar, dvt-utils.jar, jewt4.jar, xmlparserv2.jar.
+7. Edit {forms-dvc-wrapper}/pom.xml and update forms.version and dvc.version according to your environment.
+8. Build using 'mvn package'.
+
 Documentation for oracle.dss.graph and oracle.dss.gauge are located in the file "dvt-faces-javadoc.jar" which you can find in your JDeveloper install directory.
