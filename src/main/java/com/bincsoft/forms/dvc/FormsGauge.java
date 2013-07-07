@@ -25,25 +25,25 @@ import oracle.forms.properties.ID;
  */
 public class FormsGauge extends BincsoftBean {
     private Logger log = Logger.getLogger(getClass().getName());
-    private Gauge m_gauge = null;
+    private Gauge gauge = null;
     private GaugeDataStore dataStore = null;
     private String sDelimiter = ",";
     private ViewMouseListener mouseListener = null;
 
-    protected static final ID eGaugeAction = ID.registerProperty("GAUGE_ACTION");
-    protected static final ID pGaugeInfo = ID.registerProperty("GAUGE_INFO");
+    protected static final ID GAUGE_ACTION = ID.registerProperty("GAUGE_ACTION");
+    protected static final ID GAUGE_INFO = ID.registerProperty("GAUGE_INFO");
 
     public FormsGauge() throws ClassNotFoundException {
         super();
 
-        m_gauge = new Gauge();
+        gauge = new Gauge();
         dataStore = new GaugeDataStore();
 
         // Set initial gauge type
-        m_gauge.setGaugeType(GaugeConstants.DIAL);
+        gauge.setGaugeType(GaugeConstants.DIAL);
 
         // Set white background
-        m_gauge.getGaugeBackground().getSFX().setFillType(DataviewConstants.FT_COLOR);
+        gauge.getGaugeBackground().getSFX().setFillType(DataviewConstants.FT_COLOR);
 
         // Add a mouse listener
         mouseListener = new ViewMouseListener() {
@@ -65,26 +65,26 @@ public class FormsGauge extends BincsoftBean {
                 }
             };
 
-        m_gauge.addViewMouseListener(mouseListener);
+        gauge.addViewMouseListener(mouseListener);
         
         // Register all property handlers
         registerProperties(FormsGaugeProperty.values());
 
         // The gauge is shown when the data is set
-        m_gauge.setVisible(false);
+        gauge.setVisible(false);
     }
 
     @Override
     public void init(IHandler handler) {
         super.init(handler);
-        super.add(m_gauge);
-        System.out.println(getClass().getName() + " version '" + getVersion() + "' started, " +
-                           m_gauge.getClass().getName() + " version '" + m_gauge.getVersion() + "'.");
+        super.add(gauge);
+        log.info(getClass().getName() + " version '" + getVersion() + "' started, " +
+                           gauge.getClass().getName() + " version '" + gauge.getVersion() + "'.");
     }
 
     @Override
-    public boolean setProperty(ID _ID, Object _object) {
-        return super.setProperty(_ID, _object);
+    public boolean setProperty(ID id, Object object) {
+        return super.setProperty(id, object);
     }
 
     /**
@@ -127,13 +127,13 @@ public class FormsGauge extends BincsoftBean {
         Object[] aLabels = new Object[] { dataStore.getLabel() }; // Create the array holding the gauge label
 
         // Putting it all together and send the data to the gauge
-        boolean bSuccess = m_gauge.setGridData(alSpecs.toArray(), alColumnLabels.toArray(), aLabels, a);
-        m_gauge.setVisible(bSuccess); // Show the gauge if the data was set successfully
+        boolean bSuccess = gauge.setGridData(alSpecs.toArray(), alColumnLabels.toArray(), aLabels, a);
+        gauge.setVisible(bSuccess); // Show the gauge if the data was set successfully
 
         // If the data was set successfully, set the specified threshold colors
         if (bSuccess) {
             for (int i = 0; i < dataStore.getThresholdColors().size(); i++) {
-                m_gauge.getThreshold().setFillColor(i, (Color)dataStore.getThresholdColors().get(i));
+                gauge.getThreshold().setFillColor(i, (Color)dataStore.getThresholdColors().get(i));
             }
         }
         return bSuccess;
@@ -141,7 +141,7 @@ public class FormsGauge extends BincsoftBean {
 
     protected void dispatchMouseAction(String msg) {
         log("dispatchMouseAction(): " + msg);
-        dispatchCustomEvent(pGaugeInfo, msg, eGaugeAction);
+        dispatchCustomEvent(GAUGE_INFO, msg, GAUGE_ACTION);
     }
     
     public String getDelimiter() {
@@ -149,7 +149,7 @@ public class FormsGauge extends BincsoftBean {
     }
     
     public Gauge getGauge() {
-        return m_gauge;
+        return gauge;
     }
     
     @Override
@@ -181,7 +181,7 @@ public class FormsGauge extends BincsoftBean {
         //dataRows.add(row1);
 
         // pass the List to this method
-        //m_gauge.setTabularData(specs, dataRows);
+        //gauge.setTabularData(specs, dataRows);
 
         /*================= End Test Data =================*/
     }

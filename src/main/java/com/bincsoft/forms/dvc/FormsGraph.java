@@ -239,7 +239,7 @@ import oracle.forms.properties.ID;
  */
 public class FormsGraph extends BincsoftBean {
     private Logger log = Logger.getLogger(getClass().getName());
-    private Graph m_graph = null; // Instance of the DVC graph
+    private Graph graph = null; // Instance of the DVC graph
     private JLabel graphScreenshotWrapper = new JLabel();
     private int mViewListenerCount = 0; // only one view listener shall get implemented
     private int mSeparateFrameXPos = 10; // xPos of the separate Graph frame
@@ -265,18 +265,18 @@ public class FormsGraph extends BincsoftBean {
     /**
      * Custom item events
      */
-    protected static final ID pGraphInfo = ID.registerProperty("GRAPH_INFO"); // Used when dispatching
+    protected static final ID GRAPH_INFO = ID.registerProperty("GRAPH_INFO"); // Used when dispatching
     
-    protected static final ID pSeriesCount = ID.registerProperty("COLUMNCOUNT");
-    protected static final ID pTest = ID.registerProperty("TEST");
-    protected static final ID eGetSeriesCount = ID.registerProperty("RETURNED_COLUMN_NUMBER");
-    protected static final ID eGraphAction = ID.registerProperty("GRAPH_ACTION");
+    protected static final ID SERIES_COUNT = ID.registerProperty("COLUMNCOUNT");
+    protected static final ID TEST = ID.registerProperty("TEST");
+    protected static final ID RETURNED_COLUMN_NUMBER = ID.registerProperty("RETURNED_COLUMN_NUMBER");
+    protected static final ID GRAPH_ACTION = ID.registerProperty("GRAPH_ACTION");
 
     public FormsGraph() throws ClassNotFoundException {
         super();
 
         // Instantiate the BI Bean Graph
-        m_graph = new Graph();
+        graph = new Graph();
 
         // Set default values
         ResetGraph.setDefaults(this);
@@ -284,7 +284,7 @@ public class FormsGraph extends BincsoftBean {
         // Disable debug information sent from the graph
         DefaultErrorHandler deh = new DefaultErrorHandler();
         deh.setDebugMode(DefaultErrorHandler.SHOW_NONE);
-        m_graph.addErrorHandler(deh);
+        graph.addErrorHandler(deh);
 
         // Instantiate the data store for this graph
         lrd = new LocalRelationalData();
@@ -293,7 +293,7 @@ public class FormsGraph extends BincsoftBean {
         instanceVMListener = new GraphViewMouseListener(this);
         mViewListenerCount = 1;
 
-        m_graph.addViewMouseListener(instanceVMListener);
+        graph.addViewMouseListener(instanceVMListener);
 
         // Register all property handlers
         registerProperties(FormsGraphProperty.values());
@@ -317,60 +317,58 @@ public class FormsGraph extends BincsoftBean {
         internalFrameUI.setNorthPane(null);
         internalFrame.setBorder(BorderFactory.createEmptyBorder());
         internalFrame.setVisible(true);
-        internalFrame.add(m_graph);
+        internalFrame.add(graph);
         internalFrame.setGlassPane(glass);
         super.add(internalFrame);
 
-        System.out.println(String.format("%s version '%s' started, %s version '%s'.", getClass().getName(),
-                                         getVersion(), m_graph.getClass().getName(), m_graph.getVersion()));
+        log.info(String.format("%s version '%s' started, %s version '%s'.", getClass().getName(),
+                                         getVersion(), graph.getClass().getName(), graph.getVersion()));
     }
 
     /**
      * Implementation of IView interface which sets a requested property to a given value
      *
-     * @param _ID  property to be set.
-     * @param _object value of the property id.
+     * @param id  property to be set.
+     * @param object value of the property id.
      * @return true if the property could be set, false otherwise.
      * @see oracle.forms.ui.IView
      */
     @Override
-    public boolean setProperty(ID _ID, Object _object) {
-        String sParams = _object == null ? "" : _object.toString();
+    public boolean setProperty(ID id, Object object) {
+        String sParams = object == null ? "" : object.toString();
 
-        if (_ID == pTest) {
+        if (id == TEST) {
             return test(sParams);
         }
 
-        return super.setProperty(_ID, _object);
+        return super.setProperty(id, object);
     }
 
     /**
      * Handles get actions from Forms
-     * @param _ID
+     * @param id
      * @return
      */
     @Override
-    public Object getProperty(ID _ID) {
-        if (_ID == pSeriesCount) {
+    public Object getProperty(ID id) {
+        if (id == SERIES_COUNT) {
             try {
                 // retrieve graph column count for further usage
                 log.log(Level.FINE, "SERIES COUNT requested");
                 // if rows shown as series then row number = column number
                 if (showGraphAsSeries) {
-                    return new Integer(m_graph.getRowCount());
+                    return Integer.valueOf(graph.getRowCount());
                 } else {
-                    return new Integer(m_graph.getColumnCount());
+                    return Integer.valueOf(graph.getColumnCount());
                 }
             } catch (Exception e) {
-                log.log(Level.FINE, "====SERIES COUNT Error====");
-                log.log(Level.FINE, e.getMessage());
-                log.log(Level.FINE, "==========================");
+                log.log(Level.FINE, "====SERIES COUNT Error====", e);
                 log.log(Level.FINE, "returning 0");
                 // show 0 if no column can be retrieved
-                return new Integer(0);
+                return Integer.valueOf(0);
             }
         } else {
-            return super.getProperty(_ID);
+            return super.getProperty(id);
         }
     }
 
@@ -388,11 +386,11 @@ public class FormsGraph extends BincsoftBean {
     }
 
     public void dispatchMouseAction(String msg) {
-        dispatchCustomEvent(pGraphInfo, msg, eGraphAction);
+        dispatchCustomEvent(GRAPH_INFO, msg, GRAPH_ACTION);
     }
 
     public void returnSeriesCount(int ret) {
-        dispatchCustomEvent(pGraphInfo, Integer.toString(ret), eGetSeriesCount);
+        dispatchCustomEvent(GRAPH_INFO, Integer.toString(ret), RETURNED_COLUMN_NUMBER);
     }
 
     /**
@@ -406,7 +404,7 @@ public class FormsGraph extends BincsoftBean {
         getNoDataFoundPanel().setText(getNoDataFoundMessage());
         getNoDataFoundPanel().setSize(new Dimension(super.getWidth(), super.getHeight()));
         // Set message panel color to color of graph
-        getNoDataFoundPanel().setSelectionColor(m_graph.getBackground());
+        getNoDataFoundPanel().setSelectionColor(graph.getBackground());
         getNoDataFoundPanel().setRequestFocusEnabled(false);
         getNoDataFoundPanel().setVerifyInputWhenFocusTarget(false);
         super.add(getNoDataFoundPanel());
@@ -418,7 +416,7 @@ public class FormsGraph extends BincsoftBean {
      */
 
     public Graph getGraph() {
-        return m_graph;
+        return graph;
     }
 
     public LocalRelationalData getLocalRelationalData() {
@@ -442,11 +440,11 @@ public class FormsGraph extends BincsoftBean {
     }
 
     public void removeGraph() {
-        getInternalFrame().remove(m_graph);
+        getInternalFrame().remove(graph);
     }
 
     public void addGraph() {
-        getInternalFrame().add(m_graph);
+        getInternalFrame().add(graph);
     }
     
     public void setGraphScreenshot(BufferedImage image) {
@@ -557,10 +555,6 @@ public class FormsGraph extends BincsoftBean {
         return getGraph();
     }
 
-    public void log(String msg) {
-        super.log(msg);
-    }
-
     private void addTestData() {
         /*
          * Test Data allowing you to run this Java Bean in Forms without
@@ -577,8 +571,8 @@ public class FormsGraph extends BincsoftBean {
         lrd.addRelationalDataRow("USA,Brutto,7000,7", getDelimiter());
         lrd.addRelationalDataRow("Europe,Brutto,5000,8", getDelimiter());
 
-        m_graph.setTabularData(lrd.getRelationalData());
-        m_graph.setVisible(true);
+        graph.setTabularData(lrd.getRelationalData());
+        graph.setVisible(true);
     }
 
     private void enableThreeDMouseManipulation() {
@@ -588,14 +582,13 @@ public class FormsGraph extends BincsoftBean {
                 }
 
                 public void mouseDragged(ViewMouseEvent evt) {
-                    m_graph.setDepthRadius(15);
-                    m_graph.setDepthAngle(evt.getX());
-                    m_graph.setPieDepth(evt.getY());
-                    m_graph.setPieRotation(evt.getX());
-                    //System.out.println(evt.getX());
+                    graph.setDepthRadius(15);
+                    graph.setDepthAngle(evt.getX());
+                    graph.setPieDepth(evt.getY());
+                    graph.setPieRotation(evt.getX());
                 }
             };
 
-        m_graph.addViewMouseMotionListener(mouseMotionListener);
+        graph.addViewMouseMotionListener(mouseMotionListener);
     }
 }

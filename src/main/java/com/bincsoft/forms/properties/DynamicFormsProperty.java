@@ -20,42 +20,58 @@ public class DynamicFormsProperty extends FormsPropertyHandler {
             String[] params = sParams.split(bean.getDelimiter());
             if (params.length > 0) {
                 Object[] args = Arrays.copyOfRange(params, 1, params.length);
-                Method method = getMethod(params[0], args.length);
+                String[] methodNames = params[0].split("\\.");
+                
+                List<Method> methodList = new ArrayList<Method>();
+                for (String methodName : methodNames) {
+                    log(String.format("Received method name: %s", methodName));
+                    methodList.add(getMethod(methodName, args.length));
+                }
+                
+                //Method method = getMethod(methodNames[0], args.length);
 
-                if (method == null) {
+                if (methodList.size() == 0) {
                     log(String.format("Could not find any method named '%s' with '%s' args", params[0], args.length));
                     return true;
                 }
 
-                try {
-                    method.setAccessible(true);
-                    if (args.length == 0) {
-                        method.invoke(bean.getWrappedObject());
-                    } else {
-                        log(String.format("Found method '%s', trying to invoke with the following args:",
-                                          method.getName()));
-                        for (Object obj : args) {
-                            log(obj.toString());
-                        }
-
-                        try {
-                            args = tryConvertObjects(args);
-                            method.invoke(bean.getWrappedObject(), args);
-                        } catch (ConvertException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
-                } catch (InvocationTargetException e) {
-                    e.printStackTrace();
-                } catch (IllegalArgumentException e) {
-                    e.printStackTrace();
+                for (Method method : methodList) {
+                    
                 }
             }
         }
         return true;
     }
+    
+//    private void invokeMethod(Method method, String[] args) {
+//        try {
+//            method.setAccessible(true);
+//            if (args.length == 0) {
+//                log(String.format("Found method '%s', trying to invoke.", method.getName()));
+//                Object result = method.invoke(bean.getWrappedObject());
+//                log(String.format("Invokation result: %s", result));
+//            } else {
+//                log(String.format("Found method '%s', trying to invoke with the following args:",
+//                                  method.getName()));
+//                for (Object obj : args) {
+//                    log(obj.toString());
+//                }
+//
+//                try {
+//                    args = tryConvertObjects(args);
+//                    method.invoke(bean.getWrappedObject(), args);
+//                } catch (ConvertException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        } catch (IllegalAccessException e) {
+//            e.printStackTrace();
+//        } catch (InvocationTargetException e) {
+//            e.printStackTrace();
+//        } catch (IllegalArgumentException e) {
+//            e.printStackTrace();
+//        }
+//    }
 
     private Method getMethod(String name, int paramCount) {
         Class graphClass = Graph.class;
