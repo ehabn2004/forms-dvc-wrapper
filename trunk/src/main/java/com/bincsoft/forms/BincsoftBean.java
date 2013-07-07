@@ -208,9 +208,9 @@ public class BincsoftBean extends VBean {
             String logPackageName = packageName.substring(0, packageName.indexOf(".", packageName.indexOf(".") + 1));
             log.log(Level.INFO, String.format("Settings logging level '%s' for package '%s'", level, logPackageName));
 
-//            ConsoleHandler handler = new ConsoleHandler();
-//            handler.setLevel(level);
-//            Logger.getLogger(logPackageName).addHandler(handler);
+            ConsoleHandler handler = new ConsoleHandler();
+            handler.setLevel(level);
+            Logger.getLogger(logPackageName).addHandler(handler);
             Logger.getLogger(logPackageName).setLevel(level);
         }
 

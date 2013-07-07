@@ -38,7 +38,7 @@ public class DynamicFormsPropertyTest {
     }
     
     @Test
-    public void testInitializeFormsGraph() {        
+    public void testInitializeFormsGraph() {
         log.info(String.format("FormsGraphProperty contains %s properties", FormsGraphProperty.values().length));
         log.info(String.format("FormsGraph registered %s property handlers", formsGraph.getPropertyHandlers().size()));
         int expectedPropertyCount = FormsProperty.values().length + FormsGraphProperty.values().length;
