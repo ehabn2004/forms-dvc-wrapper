@@ -33,8 +33,8 @@ import oracle.dss.util.SliceOutOfRangeException;
  * in the BI Graph
  */
 public class GraphViewMouseListener implements ViewMouseListener, ActionListener {
-    Logger log = Logger.getLogger(getClass().getName());
-    FormsGraph formsGraph = null;
+    private Logger log = Logger.getLogger(getClass().getName());
+    private FormsGraph formsGraph = null;
 
     private ViewMouseEvent objEvent = null;
     private Timer objTimer = null;
@@ -121,7 +121,7 @@ public class GraphViewMouseListener implements ViewMouseListener, ActionListener
               *********************************/
 
                 String sDelimiter = formsGraph.getDelimiter();
-                String GraphInfo = "";
+                String graphInfo = "";
 
                 /*
                * Determine the data returned by this mouse click
@@ -138,47 +138,47 @@ public class GraphViewMouseListener implements ViewMouseListener, ActionListener
                     }
                     dataObject = formsGraph.getLocalRelationalData().getPrimaryKey(dataObject, sDelimiter, formsGraph.isShowGraphAsSeries());
 
-                    GraphInfo =
+                    graphInfo =
                             dataObject != null ? rowLabel + sDelimiter + columnLabel + sDelimiter + graphData.toString() +
                             sDelimiter + dataObject :
                             rowLabel + sDelimiter + columnLabel + sDelimiter + graphData.toString();
 
                     //GraphInfo =rowLabel+sDelimiter+columnLabel+sDelimiter+graphData.toString();
-                    log.log(Level.FINE, "mouseClicked() - Timer - Dispatch value '" + GraphInfo + "' to Forms");
-                    formsGraph.dispatchMouseAction(GraphInfo);
+                    log.log(Level.FINE, "mouseClicked() - Timer - Dispatch value '" + graphInfo + "' to Forms");
+                    formsGraph.dispatchMouseAction(graphInfo);
                 } else if (formsGraph.getReturnValueSelection() == ReturnValues.DATA_LABEL) {
                     log.log(Level.FINE, "mouseClicked() - Timer - Mouse Click returns rowLabel");
 
                     // if the group (column data) is shown as row data (series) then the rowlabels and column
                     // labels needs to be swapped
                     if (formsGraph.isShowGraphAsSeries()) {
-                        GraphInfo = columnLabel;
-                        log.log(Level.FINE, "mouseClicked() - Timer - Dispatch value '" + GraphInfo + "' to Forms");
+                        graphInfo = columnLabel;
+                        log.log(Level.FINE, "mouseClicked() - Timer - Dispatch value '" + graphInfo + "' to Forms");
                     } else {
-                        GraphInfo = rowLabel;
-                        log.log(Level.FINE, "mouseClicked() - Timer - Dispatch value '" + GraphInfo + "'' to Forms");
+                        graphInfo = rowLabel;
+                        log.log(Level.FINE, "mouseClicked() - Timer - Dispatch value '" + graphInfo + "'' to Forms");
                     }
-                    formsGraph.dispatchMouseAction(GraphInfo);
+                    formsGraph.dispatchMouseAction(graphInfo);
                 } else if (formsGraph.getReturnValueSelection() == ReturnValues.DATA_COLUMN) {
                     log.log(Level.FINE, "mouseClicked() - Timer - Mouse Click returns columnLabel");
 
                     // if the group (column data) is shown as row data (series) then the rowlabels and column
                     // labels needs to be swapped
                     if (formsGraph.isShowGraphAsSeries()) {
-                        GraphInfo = rowLabel;
-                        log.log(Level.FINE, "mouseClicked() - Timer - Dispatch value '" + GraphInfo + "' to Forms");
+                        graphInfo = rowLabel;
+                        log.log(Level.FINE, "mouseClicked() - Timer - Dispatch value '" + graphInfo + "' to Forms");
 
                     } else {
-                        GraphInfo = columnLabel;
-                        log.log(Level.FINE, "mouseClicked() - Timer - Dispatch value '" + GraphInfo + "' to Forms");
+                        graphInfo = columnLabel;
+                        log.log(Level.FINE, "mouseClicked() - Timer - Dispatch value '" + graphInfo + "' to Forms");
                     }
 
-                    formsGraph.dispatchMouseAction(GraphInfo);
+                    formsGraph.dispatchMouseAction(graphInfo);
                 } else if (formsGraph.getReturnValueSelection() == ReturnValues.DATA_VALUE) {
                     log.log(Level.FINE, "mouseClicked() - Timer - Mouse Click returns rowValue");
-                    GraphInfo = graphData.toString();
-                    log.log(Level.FINE, "mouseClicked() - Timer - Dispatch value '" + GraphInfo + "' to Forms");
-                    formsGraph.dispatchMouseAction(GraphInfo);
+                    graphInfo = graphData.toString();
+                    log.log(Level.FINE, "mouseClicked() - Timer - Dispatch value '" + graphInfo + "' to Forms");
+                    formsGraph.dispatchMouseAction(graphInfo);
                 }
                 //  return primary key only
                 else if (formsGraph.getReturnValueSelection() == ReturnValues.DATA_PRIMARY_KEY) {
@@ -193,22 +193,22 @@ public class GraphViewMouseListener implements ViewMouseListener, ActionListener
                     } else {
                         dataObject = columnLabel + sDelimiter + rowLabel + sDelimiter + graphData.toString();
                     }
-                    GraphInfo = formsGraph.getLocalRelationalData().getPrimaryKey(dataObject, sDelimiter, formsGraph.isShowGraphAsSeries());
-                    log.log(Level.FINE, "mouseClicked() - Timer - Dispatch value " + GraphInfo + " to Forms");
-                    formsGraph.dispatchMouseAction(GraphInfo);
+                    graphInfo = formsGraph.getLocalRelationalData().getPrimaryKey(dataObject, sDelimiter, formsGraph.isShowGraphAsSeries());
+                    log.log(Level.FINE, "mouseClicked() - Timer - Dispatch value " + graphInfo + " to Forms");
+                    formsGraph.dispatchMouseAction(graphInfo);
                 } else {
                     log.log(Level.FINE, "mouseClicked() - Timer - Mouse Click returns no value");
                     // no value as none is selected for returnValueSelection
                 }
             }
-        } catch (ColumnOutOfRangeException coore) {
-            coore.printStackTrace();
-        } catch (RowOutOfRangeException roore) {
-            roore.printStackTrace();
-        } catch (SliceOutOfRangeException soore) {
-            soore.printStackTrace();
-        } catch (EdgeOutOfRangeException eoore) {
-            eoore.printStackTrace();
+        } catch (ColumnOutOfRangeException e) {
+        	log.log(Level.SEVERE, "actionPerformed", e);
+        } catch (RowOutOfRangeException e) {
+        	log.log(Level.SEVERE, "actionPerformed", e);
+        } catch (SliceOutOfRangeException e) {
+        	log.log(Level.SEVERE, "actionPerformed", e);
+        } catch (EdgeOutOfRangeException e) {
+        	log.log(Level.SEVERE, "actionPerformed", e);
         }
         log.log(Level.FINE, "mouseClicked() - Timer - Completed");
     }

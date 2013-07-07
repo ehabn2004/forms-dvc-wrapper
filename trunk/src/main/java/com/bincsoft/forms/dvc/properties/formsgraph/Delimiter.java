@@ -2,8 +2,6 @@ package com.bincsoft.forms.dvc.properties.formsgraph;
 
 import com.bincsoft.forms.dvc.FormsGraph;
 
-import java.util.logging.Level;
-
 
 public class Delimiter implements IFormsGraphProperty {
     public Delimiter() {

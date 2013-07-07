@@ -32,9 +32,9 @@ public class BincsoftBean extends VBean {
     protected static final ID HDAPP_VERSION =
         ID.registerProperty("HDAPP_VERSION"); // Property to get the hdapp version
 
-    protected static final ID pDelimiterInfo =
+    protected static final ID DELIMITER_INFO =
         ID.registerProperty("DELIMITER_INFO"); // Used when dispatching delimiter
-    protected static final ID eGetDelimiter = ID.registerProperty("CURRENT_DELIMITER");
+    protected static final ID CURRENT_DELIMITER = ID.registerProperty("CURRENT_DELIMITER");
 
     private Main formsMain = null;
     private Frame formsTopFrame = null;
@@ -94,61 +94,61 @@ public class BincsoftBean extends VBean {
             getHandler().setProperty(eventValuesID, sValue);
             CustomEvent ce = new CustomEvent(getHandler(), eventID);
             dispatchCustomEvent(ce);
-        } catch (Exception ex) {
-            ex.printStackTrace();
+        } catch (Exception e) {
+            log.log(Level.SEVERE, "Could not dispatch custom event.", e);
         }
     }
 
     @Override
-    public boolean setProperty(ID _ID, Object _object) {
-        String sParams = _object == null ? "" : _object.toString();
+    public boolean setProperty(ID id, Object object) {
+        String sParams = object == null ? "" : object.toString();
         log(sParams);
 
-        if (getPropertyHandlers().containsKey(_ID.toString())) {
-            IFormsProperty property = getPropertyHandlers().get(_ID.toString());
+        if (getPropertyHandlers().containsKey(id.toString())) {
+            IFormsProperty property = getPropertyHandlers().get(id.toString());
             log.log(Level.FINE,
                     String.format("Found handler %s for property %s", property.getHandlerFullyQualifiedName(),
-                                  _ID.toString()));
+                                  id.toString()));
             ClassLoader cl = this.getClass().getClassLoader();
             try {
                 Class cls = cl.loadClass(property.getHandlerFullyQualifiedName());
                 FormsPropertyHandler prop = (FormsPropertyHandler)cls.newInstance();
                 return prop.handleProperty(sParams, this);
             } catch (ClassNotFoundException ex) {
-                ex.printStackTrace();
+                log.log(Level.SEVERE, String.format("Could not find handler for property: %s", property), ex);
             } catch (InstantiationException ex) {
-                ex.printStackTrace();
+            	log.log(Level.SEVERE, "Could not instantiate property handler.", ex);
             } catch (IllegalAccessException ex) {
-                ex.printStackTrace();
+            	log.log(Level.SEVERE, "Could not access property handler.", ex);
             }
-        } else if (_ID == DEBUG) {
+        } else if (id == DEBUG) {
             return setDebug(sParams);
-        } else if (_ID == RETURN_XML) {
+        } else if (id == RETURN_XML) {
             return setReturnXml(sParams);
-        } else if (_ID == PROP_PRINTLN) {
-            if (_object != null) {
-                System.out.println((String)_object);
+        } else if (id == PROP_PRINTLN) {
+            if (object != null) {
+                System.out.println((String)object);
             }
             return true;
-        } else if (_ID == GET_DELIMITER) {
+        } else if (id == GET_DELIMITER) {
             dispatchDelimiter();
             return true;
         } else {
-            return super.setProperty(_ID, _object);
+            return super.setProperty(id, object);
         }
-        return super.setProperty(_ID, _object);
+        return super.setProperty(id, object);
     }
 
     @Override
-    public Object getProperty(ID prop) {
-        if (prop == GET_DELIMITER) {
+    public Object getProperty(ID id) {
+        if (id == GET_DELIMITER) {
             return getDelimiter();
-        } else if (prop == PROP_JAVA_VERSION) {
+        } else if (id == PROP_JAVA_VERSION) {
             return System.getProperty("java.version"); //System.getProperty("java.vm.version"); // returns incorrect version when running VM 1.6
-        } else if (prop == HDAPP_VERSION) {
+        } else if (id == HDAPP_VERSION) {
             return getVersion();
         } else {
-            return super.getProperty(prop);
+            return super.getProperty(id);
         }
     }
 
@@ -208,9 +208,9 @@ public class BincsoftBean extends VBean {
             String logPackageName = packageName.substring(0, packageName.indexOf(".", packageName.indexOf(".") + 1));
             log.log(Level.INFO, String.format("Settings logging level '%s' for package '%s'", level, logPackageName));
 
-            ConsoleHandler handler = new ConsoleHandler();
-            handler.setLevel(level);
-            Logger.getLogger(logPackageName).addHandler(handler);
+//            ConsoleHandler handler = new ConsoleHandler();
+//            handler.setLevel(level);
+//            Logger.getLogger(logPackageName).addHandler(handler);
             Logger.getLogger(logPackageName).setLevel(level);
         }
 
@@ -221,7 +221,7 @@ public class BincsoftBean extends VBean {
         return true;
     }
 
-    protected void log(String msg) {
+    public void log(String msg) {
         log(Level.FINE, msg);
     }
 
@@ -230,6 +230,6 @@ public class BincsoftBean extends VBean {
     }
 
     private void dispatchDelimiter() {
-        dispatchCustomEvent(pDelimiterInfo, getDelimiter(), eGetDelimiter);
+        dispatchCustomEvent(DELIMITER_INFO, getDelimiter(), CURRENT_DELIMITER);
     }
 }
